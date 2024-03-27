@@ -1,9 +1,13 @@
-from django.contrib import admin
-from django.urls import include, path
+from django.urls import path
+from . import views
+from .views import register
+
+app_name = 'recipe_recommender'  
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('recipe_recommender/', include('recipe_recommender.urls')), 
+    path('update_preferences/', views.update_preferences, name='update_preferences'),
+    path('upload/', views.upload_image, name='upload_image'),
+    path('register/', register, name='register')
 ]
 
 
