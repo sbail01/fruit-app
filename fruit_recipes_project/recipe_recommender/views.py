@@ -23,7 +23,10 @@ def register(request):
             return redirect('index')  # Redirect to a home page or user profile
     else:
         form = UserCreationForm()
-    return render(request, 'recipe_recommender/register.html', {'form': form})
+    return render(request, 'register.html', {'form': form})
+
+def index(request):
+    return render(request, 'recipe_recommender/index.html')
 
 @csrf_exempt
 def preprocess_image(image):
