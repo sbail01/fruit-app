@@ -4,7 +4,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from transformers import AutoModelForImageClassification, AutoFeatureExtractor
+from transformers import AutoModelForImageClassification, ViTImageProcessor
 from PIL import Image
 import torch
 import numpy as np  # Ensure NumPy is imported
@@ -12,7 +12,7 @@ import numpy as np  # Ensure NumPy is imported
 # Load the Hugging Face model and feature extractor
 model_name = "PedroSampaio/fruits-360-16-7"
 model = AutoModelForImageClassification.from_pretrained(model_name)
-feature_extractor = AutoFeatureExtractor.from_pretrained(model_name)
+feature_extractor = ViTImageProcessor.from_pretrained(model_name)
 
 def register(request):
     if request.method == 'POST':
@@ -27,6 +27,22 @@ def register(request):
 
 def index(request):
     return render(request, 'recipe_recommender/index.html')
+
+@login_required
+def profile_view(request):
+    return render(request, 'recipe_recommender/profile.html', {'user': request.user})
+
+@login_required
+def edit_profile_view(request):
+    if request.method == 'POST':
+        form = UserChangeForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = UserChangeForm(instance=request.user)
+    return render(request, 'recipe_recommender/edit_profile.html', {'form': form})
+
 
 @csrf_exempt
 def preprocess_image(image):
