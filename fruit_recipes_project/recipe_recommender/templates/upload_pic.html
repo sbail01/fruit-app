@@ -187,7 +187,6 @@
     </style>
 </head>
 <body>
-
 <div class="switch-container">
     <label for="togBtn">Click & Upload</label>
     <label class="switch">
@@ -200,6 +199,7 @@
 <div id="camera-container">
     <video id="camera" autoplay></video>
     <button id="capture">Capture Photo</button>
+    <button id="switchCamera">Switch Camera</button>
     <canvas id="canvas"></canvas>
 </div>
 
@@ -243,6 +243,42 @@
     const uploadBtn = document.getElementById('uploadBtn');
     const cancelBtn = document.getElementById('cancelBtn');
     const imagePreview = document.getElementById('image-preview');
+    let useFrontCamera = true; // Flag to toggle between cameras
+
+document.getElementById('switchCamera').addEventListener('click', function() {
+    useFrontCamera = !useFrontCamera; // Toggle the camera flag
+    startCamera(); // Restart the camera with the new setting
+});
+
+function getCameraConstraints() {
+    const facingMode = useFrontCamera ? "user" : "environment";
+    return { video: { facingMode } };
+}
+
+// function startCamera() {
+//     stopCamera(); // Ensure we stop any previous stream
+
+//     const constraints = getCameraConstraints(); // Get constraints for the current camera
+
+//     navigator.mediaDevices.getUserMedia(constraints)
+//         .then(function(stream) {
+//             camera.srcObject = stream;
+//             camera.play();
+//         }).catch(function(error) {
+//             showSnackbar("Something went wrong with the camera!");
+//             console.log("Something went wrong with the camera!", error);
+//         });
+// }
+
+function stopCamera() {
+    if (camera.srcObject) {
+        camera.srcObject.getTracks().forEach(track => track.stop());
+    }
+    camera.srcObject = null; // Clear the video source
+    camera.style.display = 'none';
+    capture.style.display = 'none';
+}
+
     window.onload = function() {
         if (!togBtn.checked) {
             dropArea.style.display = 'none'; // Show drop area by default
@@ -265,19 +301,22 @@
     });
 
     function startCamera() {
-        camera.style.display = 'block';
-        capture.style.display = 'block';
-        if (navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(function(stream) {
-                    camera.srcObject = stream;
-                })
-                .catch(function(error) {
-                    console.log("Something went wrong with the camera!");
-                });
-        }
-    }
+    stopCamera(); // Ensure we stop any previous stream
 
+    camera.style.display = 'block';
+    capture.style.display = 'block';
+
+    const constraints = getCameraConstraints(); // Get constraints for the current camera
+
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(stream) {
+            camera.srcObject = stream;
+            camera.play();
+        }).catch(function(error) {
+            console.error("Something went wrong with the camera!", error);
+            // showSnackbar("Something went wrong with the camera!"); // Use a snackbar to show the error
+        });
+}
     function stopCamera() {
         camera.style.display = 'none';
         capture.style.display = 'none';
