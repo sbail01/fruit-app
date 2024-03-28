@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload or Capture Photo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #drop-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            width: 90%; /* Responsive width */
+            max-width: 500px; /* Maximum width */
+            margin: 20px 0;
+            position: relative;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .drag-over {
+            background-color: #f0f0f0;
+        }
+        #camera, #canvas {
+            width: 90%; /* Responsive width */
+            max-width: 500px; /* Maximum width */
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px; /* Larger font size for easier interaction */
+        }
+    </style>
+</head>
+<body>
+
+<form method="post" enctype="multipart/form-data" id="file-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div id="drop-area">
+        Drag and drop a file here or click to select a file
+        <input type="file" id="fileElem" multiple accept="image/*" style="display: none;">
+    </div>
+    <button type="submit">Upload Photo</button>
+</form>
+
+<div>
+    <video id="camera" autoplay></video>
+    <button id="capture">Capture Photo</button>
+    <canvas id="canvas" style="display:none;"></canvas>
+</div>
+
+<script>
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('fileElem');
+
+    dropArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function(event) {
+        handleFiles(this.files);
+    });
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false); // Prevents defaults for the whole body to ensure smooth dragging.
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => dropArea.classList.add('drag-over'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, () => dropArea.classList.remove('drag-over'), false);
+    });
+
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        let dt = e.dataTransfer;
+        let files = dt.files;
+        handleFiles(files);
+    }
+
+    function handleFiles(files) {
+        console.log(files);
+        // Implement file handling logic here
+        // For example, previewing or directly uploading them
+    }
+
+    const camera = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const capture = document.getElementById('capture');
+    const context = canvas.getContext('2d');
+    let stream = null;
+
+    async function enableCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            camera.srcObject = stream;
+        } catch (err) {
+            console.error("Error: Couldn't access the camera", err);
+        }
+    }
+
+    capture.addEventListener('click', function() {
+        context.drawImage(camera, 0, 0, canvas.width, canvas.height);
+        const imageDataUrl = canvas.toDataURL('image/png');
+        // Additional steps to upload captured image can be implemented here
+    });
+
+    enableCamera();
+</script>
+
+</body>
+</html>
