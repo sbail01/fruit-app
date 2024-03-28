@@ -219,8 +219,13 @@
             <img id="image-preview" class="image-preview">
         </div>
         <div class="modal-footer">
-            <button id="uploadBtn">Upload</button>
-            <button id="cancelBtn">Cancel</button>
+            <form id="uploadForm" action="upload/" method="post" enctype="multipart/form-data">
+                <!-- The CSRF token should be included if this form is part of a Django template -->
+                <input type="file" id="imageInput" name="image" style="display: none;"/>
+                <button type="button" id="uploadBtn">Upload</button>
+                <button type="button" id="cancelBtn">Cancel</button>
+            </form>
+            
         </div>
     </div>
 </div>
@@ -335,11 +340,65 @@
         imagePreview.src = ''; // Clear the image preview
     });
     uploadBtn.addEventListener('click', function() {
-        // Code to handle the "upload" action
-        console.log('Upload the image...');
-        // You will need to implement actual upload functionality as per your requirement
+    // Assuming imageDataUrl contains the base64 image data from the canvas
+    const imageDataUrl = canvas.toDataURL('image/png');
+    // Convert base64/URLEncoded data component to raw binary data held in a string
+    function dataURItoBlob(dataURI) {
+        var byteString = atob(dataURI.split(',')[1]);
+        var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+        var ab = new ArrayBuffer(byteString.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], {type: mimeString});
+    }
+    // Create a new FormData object and append the file
+    var formData = new FormData();
+    var blob = dataURItoBlob(imageDataUrl);
+    formData.append("file", blob, "image.png");
+    
+    // Fetch the CSRF token from the cookie named csrftoken
+    function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim(); // Just use .trim() for vanilla JS
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+        return cookieValue;
+    }
+
+    var csrftoken = getCookie('csrftoken');
+
+    // Perform the fetch call to send the image to the server
+    fetch('/upload/', { // Use the URL related to your Django route
+        method: 'POST',
+        body: formData,
+        // Add CSRF token header required by Django
+        headers: {
+            "X-CSRFToken": csrftoken,
+            // "Content-Type": "multipart/form-data" // Do NOT add this line, let browser set it
+        },
+        credentials: 'include' // Necessary for including the CSRF cookie in the request
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+        // Handle success, close modal, etc.
         modal.style.display = "none";
+    })
+    .catch((error) => {
+        console.error('Error:', error);
     });
+});
+
 </script>
 
 </body>
