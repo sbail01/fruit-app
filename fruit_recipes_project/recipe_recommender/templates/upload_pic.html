@@ -5,124 +5,320 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload or Capture Photo</title>
     <style>
+        /* Base styles */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 10px;
+            background-color: #f7f7f7;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            min-height: 100vh;
         }
-        #drop-area {
+        .capture {
+            /* Center the capture button with padding */
+            display: flex;
+            justify-content: center;
+            padding-top: 2%;
+        }
+        #capture {
+            /* Place the capture button in the center */
+            margin: 20px auto; /* Center button with auto margin and some space */
+        }
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .switch-container label {
+            margin: 0 10px;
+            font-size: 14px;
+        }
+
+        /* Style the switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input { display: none; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; bottom: 0; left: 0; right: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Styles for drop area and camera */
+        #drop-area, #camera-container {
             border: 2px dashed #ccc;
+            border-radius: 20px;
             padding: 20px;
             width: 90%; /* Responsive width */
-            max-width: 500px; /* Maximum width */
-            margin: 20px 0;
-            position: relative;
-            text-align: center;
+            max-width: 520px; /* Maximum fixed width */
+            min-height: 100px;
+            height:auto;
+            background-color: #fff;
             cursor: pointer;
-            transition: background-color 0.3s;
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
-        .drag-over {
-            background-color: #f0f0f0;
+        #drop-area.highlight {
+            border-color: blue;
+            background-color: #e8f0fe;
         }
         #camera, #canvas {
+            display: none; /* Camera hidden by default */
             width: 90%; /* Responsive width */
-            max-width: 500px; /* Maximum width */
+            justify-content: center;
+            max-width: 520px; /* Maximum fixed width */
+            height: auto;
         }
-        button {
-            margin-top: 10px;
-            padding: 10px 20px;
+
+        #camera-container {
+            display: flex; /* Camera container hidden by default */
+            justify-content: center;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0); /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .modal-footer button {
+            margin-left: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
             cursor: pointer;
-            font-size: 16px; /* Larger font size for easier interaction */
         }
+
+        .image-preview {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
     </style>
 </head>
 <body>
 
-<form method="post" enctype="multipart/form-data" id="file-form">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <div id="drop-area">
-        Drag and drop a file here or click to select a file
-        <input type="file" id="fileElem" multiple accept="image/*" style="display: none;">
-    </div>
-    <button type="submit">Upload Photo</button>
-</form>
+<div class="switch-container">
+    <label for="togBtn">Click & Upload</label>
+    <label class="switch">
+        <input type="checkbox" id="togBtn">
+        <span class="slider round"></span>
+    </label>
+    <label for="togBtn">Upload from Device</label>
+</div>
 
-<div>
+<div id="camera-container">
     <video id="camera" autoplay></video>
     <button id="capture">Capture Photo</button>
-    <canvas id="canvas" style="display:none;"></canvas>
+    <canvas id="canvas"></canvas>
+</div>
+
+<div id="drop-area" style="display: flex;">
+    <p>Drag and Drop file here or click to browse</p>
+    <input type="file" id="fileElem" multiple accept="image/*">
+</div>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Preview</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <img id="image-preview" class="image-preview">
+        </div>
+        <div class="modal-footer">
+            <button id="uploadBtn">Upload</button>
+            <button id="cancelBtn">Cancel</button>
+        </div>
+    </div>
 </div>
 
 <script>
+    const togBtn = document.getElementById('togBtn');
+    const cameraContainer = document.getElementById('camera-container');
     const dropArea = document.getElementById('drop-area');
-    const fileInput = document.getElementById('fileElem');
-
-    dropArea.addEventListener('click', function() {
-        fileInput.click();
-    });
-
-    fileInput.addEventListener('change', function(event) {
-        handleFiles(this.files);
-    });
-
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, preventDefaults, false);
-        document.body.addEventListener(eventName, preventDefaults, false); // Prevents defaults for the whole body to ensure smooth dragging.
-    });
-
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => dropArea.classList.add('drag-over'), false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => dropArea.classList.remove('drag-over'), false);
-    });
-
-    dropArea.addEventListener('drop', handleDrop, false);
-
-    function handleDrop(e) {
-        let dt = e.dataTransfer;
-        let files = dt.files;
-        handleFiles(files);
-    }
-
-    function handleFiles(files) {
-        console.log(files);
-        // Implement file handling logic here
-        // For example, previewing or directly uploading them
-    }
-
     const camera = document.getElementById('camera');
     const canvas = document.getElementById('canvas');
     const capture = document.getElementById('capture');
-    const context = canvas.getContext('2d');
-    let stream = null;
+    const fileElem = document.getElementById('fileElem');
+    const modal = document.getElementById('myModal');
+    const closeBtn = document.getElementsByClassName('close')[0];
+    const uploadBtn = document.getElementById('uploadBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const imagePreview = document.getElementById('image-preview');
+    window.onload = function() {
+        if (!togBtn.checked) {
+            dropArea.style.display = 'none'; // Show drop area by default
+            cameraContainer.style.display = 'flex'; // Hide camera container by default
+            cameraContainer.style.justifyContent= 'center';
+            startCamera();
+        }
+    };
+    togBtn.addEventListener('change', function(e) {
+        if (!togBtn.checked) {
+            // cameraContainer.style.display = 'block';
+            dropArea.style.display = 'none';
+            cameraContainer.style.display = 'flex'; // Hide camera container by default
+            cameraContainer.style.justifyContent= 'center';
+            startCamera();
+        } else {
+            cameraContainer.style.display = 'none';
+            dropArea.style.display = 'block';
+            stopCamera();
+        }
+    });
 
-    async function enableCamera() {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            camera.srcObject = stream;
-        } catch (err) {
-            console.error("Error: Couldn't access the camera", err);
+    function startCamera() {
+        camera.style.display = 'block';
+        capture.style.display = 'block';
+        if (navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    camera.srcObject = stream;
+                })
+                .catch(function(error) {
+                    console.log("Something went wrong with the camera!");
+                });
+        }
+    }
+
+    function stopCamera() {
+        camera.style.display = 'none';
+        capture.style.display = 'none';
+        if (camera.srcObject) {
+            camera.srcObject.getTracks().forEach(track => track.stop());
         }
     }
 
     capture.addEventListener('click', function() {
-        context.drawImage(camera, 0, 0, canvas.width, canvas.height);
+        const context = canvas.getContext('2d');
+        canvas.width = camera.videoWidth;
+        canvas.height = camera.videoHeight;
+        context.drawImage(camera, 0, 0, camera.videoWidth, camera.videoHeight);
         const imageDataUrl = canvas.toDataURL('image/png');
-        // Additional steps to upload captured image can be implemented here
+        displayImage(imageDataUrl);
     });
 
-    enableCamera();
+    fileElem.addEventListener('change', function(e) {
+        handleFiles(fileElem.files);
+    });
+
+    function handleFiles(files) {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                displayImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function displayImage(src) {
+        imagePreview.src = src;
+        modal.style.display = "block";
+    }
+
+    closeBtn.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = "none";
+    });
+
+    uploadBtn.addEventListener('click', function() {
+        // Code to handle the "upload" action
+        console.log('Upload the image...');
+        // You will need to implement actual upload functionality as per your requirement
+        modal.style.display = "none";
+    });
 </script>
 
 </body>
