@@ -82,23 +82,33 @@ def upload_image(request):
     if request.method == 'POST':
         if 'file' not in request.FILES:
             return JsonResponse({'error': 'No file part'}, status=400)
-        
-        file = request.FILES['file']
-        image = Image.open(file)
-        image_tensor = preprocess_image(image)
 
-        # Use the model and feature extractor for predictions
+        # Load the image file from the request
+        file = request.FILES['file']
+        image = Image.open(file).convert('RGB')  # Ensure image is in RGB format
+        
+        # Preprocess the image using the feature extractor
         inputs = feature_extractor(images=image, return_tensors="pt")
+
+        # Get model predictions
         with torch.no_grad():
             predictions = model(**inputs)
 
+        # Post-process the predictions to get human-readable labels
         recognized_ingredients = postprocess_predictions(predictions.logits)
+
+        # Return the predictions as JSON
         return JsonResponse({'ingredients': recognized_ingredients})
 
     else:
-        # Handle non-POST requests or return a helpful error message
         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
 
+def postprocess_predictions(predictions):
+    # Assuming the model's config includes 'id2label'
+    predictions = predictions.argmax(dim=1)
+    recognized_ingredients = [model.config.id2label[pred.item()] for pred in predictions]
+    return recognized_ingredients
+@login_required
 def update_preferences(request):
     try:
         profile = request.user.profile
