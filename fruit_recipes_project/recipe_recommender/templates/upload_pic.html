@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload or Capture Photo</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f7f7f7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .capture {
+            /* Center the capture button with padding */
+            display: flex;
+            justify-content: center;
+            padding-top: 2%;
+        }
+        #capture {
+            /* Place the capture button in the center */
+            margin: 20px auto; /* Center button with auto margin and some space */
+        }
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .switch-container label {
+            margin: 0 10px;
+            font-size: 14px;
+        }
+
+        /* Style the switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input { display: none; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; bottom: 0; left: 0; right: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Styles for drop area and camera */
+        #drop-area, #camera-container {
+            border: 2px dashed #ccc;
+            border-radius: 20px;
+            padding: 20px;
+            width: 90%; /* Responsive width */
+            max-width: 520px; /* Maximum fixed width */
+            min-height: 100px;
+            height:auto;
+            background-color: #fff;
+            cursor: pointer;
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        #drop-area.highlight {
+            border-color: blue;
+            background-color: #e8f0fe;
+        }
+        #camera, #canvas {
+            display: none; /* Camera hidden by default */
+            width: 90%; /* Responsive width */
+            justify-content: center;
+            max-width: 520px; /* Maximum fixed width */
+            height: auto;
+        }
+
+        #camera-container {
+            display: flex; /* Camera container hidden by default */
+            justify-content: center;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: hidden; /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0); /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+            padding-top: 60px;
+        }
+
+        .modal-body {
+            max-height: 70vh; /* sets a maximum height relative to the viewport */
+            overflow-y: hidden; /* allows scrolling within the modal body if the content is too tall */
+        }
+
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-height: 600px;
+            max-width: 600px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .modal-footer button {
+            margin-left: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .image-preview {
+            max-width: 100%; /* ensures the image is never wider than the container */
+            max-height: 70vh; /* sets a maximum height relative to the viewport */
+            height: auto; /* maintains the aspect ratio */
+            border-radius: 4px;
+            display: flex; /* prevents inline gaps */
+            margin: auto; /* centers image in the available space */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Optional: adds a shadow for some depth */
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="switch-container">
+    <label for="togBtn">Click & Upload</label>
+    <label class="switch">
+        <input type="checkbox" id="togBtn">
+        <span class="slider round"></span>
+    </label>
+    <label for="togBtn">Upload from Device</label>
+</div>
+
+<div id="camera-container">
+    <video id="camera" autoplay></video>
+    <button id="capture">Capture Photo</button>
+    <button id="switchCamera">Switch Camera</button>
+    <canvas id="canvas"></canvas>
+</div>
+
+<div id="drop-area" style="display: flex;">
+    <p>Drag and Drop file here or click to browse</p>
+    <input type="file" id="fileElem" multiple accept="image/*">
+</div>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Preview</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <img id="image-preview" class="image-preview">
+        </div>
+        <div class="modal-footer">
+            <form id="uploadForm" action="upload/" method="post" enctype="multipart/form-data">
+                <!-- The CSRF token should be included if this form is part of a Django template -->
+                <input type="file" id="imageInput" name="image" style="display: none;"/>
+                <button type="button" id="uploadBtn">Upload</button>
+                <button type="button" id="cancelBtn">Cancel</button>
+            </form>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+    const togBtn = document.getElementById('togBtn');
+    const cameraContainer = document.getElementById('camera-container');
+    const dropArea = document.getElementById('drop-area');
+    const camera = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const capture = document.getElementById('capture');
+    const fileElem = document.getElementById('fileElem');
+    const modal = document.getElementById('myModal');
+    const closeBtn = document.getElementsByClassName('close')[0];
+    const uploadBtn = document.getElementById('uploadBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const imagePreview = document.getElementById('image-preview');
+    let useFrontCamera = true; // Flag to toggle between cameras
+
+document.getElementById('switchCamera').addEventListener('click', function() {
+    useFrontCamera = !useFrontCamera; // Toggle the camera flag
+    startCamera(); // Restart the camera with the new setting
+});
+
+function getCameraConstraints() {
+    const facingMode = useFrontCamera ? "user" : "environment";
+    return { video: { facingMode } };
+}
+
+// function startCamera() {
+//     stopCamera(); // Ensure we stop any previous stream
+
+//     const constraints = getCameraConstraints(); // Get constraints for the current camera
+
+//     navigator.mediaDevices.getUserMedia(constraints)
+//         .then(function(stream) {
+//             camera.srcObject = stream;
+//             camera.play();
+//         }).catch(function(error) {
+//             showSnackbar("Something went wrong with the camera!");
+//             console.log("Something went wrong with the camera!", error);
+//         });
+// }
+
+function stopCamera() {
+    if (camera.srcObject) {
+        camera.srcObject.getTracks().forEach(track => track.stop());
+    }
+    camera.srcObject = null; // Clear the video source
+    camera.style.display = 'none';
+    capture.style.display = 'none';
+}
+
+    window.onload = function() {
+        if (!togBtn.checked) {
+            dropArea.style.display = 'none'; // Show drop area by default
+            cameraContainer.style.display = 'flex'; // Hide camera container by default
+            cameraContainer.style.justifyContent= 'center';
+            startCamera();
+        }
+    };
+    togBtn.addEventListener('change', function(e) {
+        if (!togBtn.checked) {
+            dropArea.style.display = 'none';
+            cameraContainer.style.display = 'flex'; // Hide camera container by default
+            cameraContainer.style.justifyContent= 'center';
+            startCamera();
+        } else {
+            cameraContainer.style.display = 'none';
+            dropArea.style.display = 'block';
+            stopCamera();
+        }
+    });
+
+    function startCamera() {
+    stopCamera(); // Ensure we stop any previous stream
+
+    camera.style.display = 'block';
+    capture.style.display = 'block';
+
+    const constraints = getCameraConstraints(); // Get constraints for the current camera
+
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(stream) {
+            camera.srcObject = stream;
+            camera.play();
+        }).catch(function(error) {
+            console.error("Something went wrong with the camera!", error);
+            // showSnackbar("Something went wrong with the camera!"); // Use a snackbar to show the error
+        });
+}
+    function stopCamera() {
+        camera.style.display = 'none';
+        capture.style.display = 'none';
+        if (camera.srcObject) {
+            camera.srcObject.getTracks().forEach(track => track.stop());
+        }
+    }
+
+    capture.addEventListener('click', function() {
+        const context = canvas.getContext('2d');
+        canvas.width = camera.videoWidth;
+        canvas.height = camera.videoHeight;
+        context.drawImage(camera, 0, 0, camera.videoWidth, camera.videoHeight);
+        const imageDataUrl = canvas.toDataURL('image/png');
+        displayImage(imageDataUrl);
+    });
+
+    fileElem.addEventListener('change', function(e) {
+        handleFiles(fileElem.files);
+    });
+
+    function handleFiles(files) {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                displayImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function displayImage(src) {
+        imagePreview.src = src;
+        modal.style.display = "block";
+    }
+
+    closeBtn.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    function clearFileInput() {
+    // Clear the file input for re-use
+        fileElem.value = "";
+        if (fileElem.value) {
+            fileElem.type = "text"; // Override the input type to trick the browser into clearing it
+            fileElem.type = "file"; // Restore the original type
+        }
+    }
+
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = "none";
+        clearFileInput(); // Clear the file input
+        imagePreview.src = ''; // Clear the image preview
+    });
+    uploadBtn.addEventListener('click', function() {
+    // Assuming imageDataUrl contains the base64 image data from the canvas
+    const imageDataUrl = canvas.toDataURL('image/png');
+    // Convert base64/URLEncoded data component to raw binary data held in a string
+    function dataURItoBlob(dataURI) {
+        var byteString = atob(dataURI.split(',')[1]);
+        var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+        var ab = new ArrayBuffer(byteString.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], {type: mimeString});
+    }
+    // Create a new FormData object and append the file
+    var formData = new FormData();
+    var blob = dataURItoBlob(imageDataUrl);
+    formData.append("file", blob, "image.png");
+    
+    // Fetch the CSRF token from the cookie named csrftoken
+    function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim(); // Just use .trim() for vanilla JS
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+        return cookieValue;
+    }
+
+    var csrftoken = getCookie('csrftoken');
+
+    // Perform the fetch call to send the image to the server
+    fetch('/upload/', { // Use the URL related to your Django route
+        method: 'POST',
+        body: formData,
+        // Add CSRF token header required by Django
+        headers: {
+            "X-CSRFToken": csrftoken,
+            // "Content-Type": "multipart/form-data" // Do NOT add this line, let browser set it
+        },
+        credentials: 'include' // Necessary for including the CSRF cookie in the request
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+        // Handle success, close modal, etc.
+        modal.style.display = "none";
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+});
+
+</script>
+
+</body>
+</html>

@@ -5,6 +5,8 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from transformers import AutoModelForImageClassification, ViTImageProcessor
+from django.shortcuts import render
+from .forms import UploadPhotoForm
 from PIL import Image
 import torch
 import numpy as np  # Ensure NumPy is imported
@@ -98,3 +100,15 @@ def update_preferences(request):
         user_preference = UserPreference.objects.filter(user=request.user).first()
     
     return render(request, 'update_preferences.html', {'user_preference': user_preference})
+
+
+def upload_photo(request):
+    if request.method == 'POST':
+        form = UploadPhotoForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Your logic here
+            pass
+    else:
+        form = UploadPhotoForm()
+    return render(request, 'upload_pic.html', {'form': form})
+
