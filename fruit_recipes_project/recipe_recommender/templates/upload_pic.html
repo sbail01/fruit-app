@@ -16,6 +16,7 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            overflow: hidden;
         }
         .capture {
             /* Center the capture button with padding */
@@ -117,11 +118,17 @@
             top: 0;
             width: 100%; /* Full width */
             height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
+            overflow: hidden; /* Enable scroll if needed */
             background-color: rgb(0, 0, 0); /* Fallback color */
             background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
             padding-top: 60px;
         }
+
+        .modal-body {
+            max-height: 70vh; /* sets a maximum height relative to the viewport */
+            overflow-y: hidden; /* allows scrolling within the modal body if the content is too tall */
+        }
+
 
         .modal-content {
             background-color: #fefefe;
@@ -129,6 +136,7 @@
             padding: 20px;
             border: 1px solid #888;
             width: 90%;
+            max-height: 600px;
             max-width: 600px;
         }
 
@@ -166,11 +174,15 @@
         }
 
         .image-preview {
-            width: 100%;
-            max-width: 100%;
-            height: auto;
+            max-width: 100%; /* ensures the image is never wider than the container */
+            max-height: 70vh; /* sets a maximum height relative to the viewport */
+            height: auto; /* maintains the aspect ratio */
             border-radius: 4px;
+            display: flex; /* prevents inline gaps */
+            margin: auto; /* centers image in the available space */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Optional: adds a shadow for some depth */
         }
+
 
     </style>
 </head>
@@ -236,7 +248,6 @@
     };
     togBtn.addEventListener('change', function(e) {
         if (!togBtn.checked) {
-            // cameraContainer.style.display = 'block';
             dropArea.style.display = 'none';
             cameraContainer.style.display = 'flex'; // Hide camera container by default
             cameraContainer.style.justifyContent= 'center';
@@ -309,10 +320,20 @@
         }
     }
 
+    function clearFileInput() {
+    // Clear the file input for re-use
+        fileElem.value = "";
+        if (fileElem.value) {
+            fileElem.type = "text"; // Override the input type to trick the browser into clearing it
+            fileElem.type = "file"; // Restore the original type
+        }
+    }
+
     cancelBtn.addEventListener('click', function() {
         modal.style.display = "none";
+        clearFileInput(); // Clear the file input
+        imagePreview.src = ''; // Clear the image preview
     });
-
     uploadBtn.addEventListener('click', function() {
         // Code to handle the "upload" action
         console.log('Upload the image...');
