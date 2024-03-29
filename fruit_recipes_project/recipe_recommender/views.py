@@ -6,7 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from transformers import AutoModelForImageClassification, ViTImageProcessor
 from django.shortcuts import render
-from .forms import UploadPhotoForm
+from .forms import UploadPhotoForm, FeedbackForm, ProfileForm, CustomUserChangeForm
+from .models import Profile
 from PIL import Image
 import torch
 import numpy as np  # Ensure NumPy is imported
@@ -22,29 +23,45 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)  # Log the user in
-            return redirect('index')  # Redirect to a home page or user profile
+            return redirect('edit_profile')  
     else:
         form = UserCreationForm()
     return render(request, 'register.html', {'form': form})
 
 def index(request):
-    return render(request, 'recipe_recommender/index.html')
+    return render(request, 'index.html')
 
 @login_required
 def profile_view(request):
     return render(request, 'recipe_recommender/profile.html', {'user': request.user})
 
+def home_view(request):
+    return render(request, 'home.html')
+
 @login_required
 def edit_profile_view(request):
-    if request.method == 'POST':
-        form = UserChangeForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            return redirect('profile')
-    else:
-        form = UserChangeForm(instance=request.user)
-    return render(request, 'recipe_recommender/edit_profile.html', {'form': form})
+    try:
+        profile = request.user.profile
+    except Profile.DoesNotExist:
+        profile = Profile(user=request.user)
 
+    if request.method == 'POST':
+        user_form = CustomUserChangeForm(request.POST, instance=request.user)
+        profile_form = ProfileForm(request.POST, request.FILES, instance=profile)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            return redirect('profile')  # Make sure 'profile' is the name of the route to the user's profile
+    else:
+        user_form = CustomUserChangeForm(instance=request.user)
+        profile_form = ProfileForm(instance=profile)
+
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form
+    }
+    return render(request, 'recipe_recommender/edit_profile.html', context)
 
 @csrf_exempt
 def preprocess_image(image):
@@ -82,25 +99,25 @@ def upload_image(request):
         # Handle non-POST requests or return a helpful error message
         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
 
-@login_required
 def update_preferences(request):
-    # Your logic here to update the user's preferences
-    if request.method == 'POST':
-        preferences = request.POST.get('preferences')
-        # Update the user's preferences in the database or any other storage
-        # You can use the preferences variable to access the user's preferences
-        # and update them accordingly
-        
-        # Store the user preferences in a CSV file
-        with open('/path/to/user_preferences.csv', 'a') as file:
-            file.write(preferences + '\n')
-        
-        return JsonResponse({'success': 'Preferences updated successfully'})
-    else:
-        user_preference = UserPreference.objects.filter(user=request.user).first()
+    try:
+        profile = request.user.profile
+    except Profile.DoesNotExist:
+        profile = Profile(user=request.user)
     
-    return render(request, 'update_preferences.html', {'user_preference': user_preference})
-
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': 'Preferences updated successfully'})
+            else:
+                # Redirect to a new URL, for example, the profile page
+                return redirect('profile')  # Ensure you have a URL name 'profile' defined in your urls.py
+    else:
+        form = ProfileForm(instance=profile)
+    
+    return render(request, 'recipe_recommender/update_preferences.html', {'form': form})
 
 def upload_photo(request):
     if request.method == 'POST':
@@ -112,3 +129,15 @@ def upload_photo(request):
         form = UploadPhotoForm()
     return render(request, 'upload_pic.html', {'form': form})
 
+def feedbackform(request):
+    if request.method == 'POST':
+        fb_form = FeedbackForm(request.POST)
+        if fb_form.is_valid():
+            feedback = fb_form.save(commit=False)
+            feedback.user = request.user
+            feedback.save()
+            # Process feedback data and update arrays here
+            return redirect('upload_page')  
+    else:
+        fb_form = FeedbackForm()
+    return render(request, 'feedback_form.html', {'form': fb_form})

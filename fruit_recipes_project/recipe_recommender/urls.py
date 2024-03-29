@@ -9,6 +9,8 @@ urlpatterns = [
     path('pic-uploading-page/',upload_photo, name='upload_photo'),
     path('upload/', views.upload_image, name='upload_image'),
     path('register/', register, name='register'),
-    path('', index, name='index'),
+    path('', views.home_view, name='home'),
     path('accounts/profile/', profile_view, name='profile'),
+    path('edit-profile/', views.edit_profile_view, name='edit_profile'),  # This should match the name used in redirect
+    path('home/', views.home_view, name='home'),
 ]
