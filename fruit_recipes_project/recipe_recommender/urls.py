@@ -11,6 +11,7 @@ urlpatterns = [
     path('register/', register, name='register'),
     path('', views.home_view, name='home'),
     path('accounts/profile/', profile_view, name='profile'),
-    path('edit-profile/', views.edit_profile_view, name='edit_profile'),  # This should match the name used in redirect
+    path('edit-profile/', views.edit_profile_view, name='edit_profile'),
     path('home/', views.home_view, name='home'),
+    path('feedback/', views.feedbackform, name='feedbackform'),
 ]

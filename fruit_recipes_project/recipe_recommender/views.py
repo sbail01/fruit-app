@@ -23,7 +23,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)  # Log the user in
-            return redirect('edit_profile')  
+            return redirect('edit_profile')  # Redirect to the edit profile page
     else:
         form = UserCreationForm()
     return render(request, 'register.html', {'form': form})
@@ -108,6 +108,7 @@ def postprocess_predictions(predictions):
     predictions = predictions.argmax(dim=1)
     recognized_ingredients = [model.config.id2label[pred.item()] for pred in predictions]
     return recognized_ingredients
+
 @login_required
 def update_preferences(request):
     try:
@@ -150,4 +151,4 @@ def feedbackform(request):
             return redirect('upload_page')  
     else:
         fb_form = FeedbackForm()
-    return render(request, 'feedback_form.html', {'form': fb_form})
+    return render(request, 'feedback_form.html')
