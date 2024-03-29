@@ -9,8 +9,11 @@ from django.shortcuts import render
 from .forms import UploadPhotoForm, FeedbackForm, ProfileForm, CustomUserChangeForm
 from .models import Profile
 from PIL import Image
+from django.conf import settings
 import torch
 import numpy as np  # Ensure NumPy is imported
+import os
+from torchvision import transforms
 
 # Load the Hugging Face model and feature extractor
 model_name = "PedroSampaio/fruits-360-16-7"
@@ -62,20 +65,110 @@ def edit_profile_view(request):
         'profile_form': profile_form
     }
     return render(request, 'recipe_recommender/edit_profile.html', context)
+def apply_nms(detections, threshold=0.5):
+    """
+    Implements a simplified Non-Maximum Suppression algorithm.
 
+    Args:
+        detections (list): List of tuples (label, confidence, x, y) representing detected objects.
+        threshold (float): The IoU (Intersection over Union) threshold for suppression.
+
+    Returns:
+        list: List of filtered detections.
+    """
+
+    # Sort detections by decreasing confidence score
+    detections = sorted(detections, key=lambda x: x[1], reverse=True)
+
+    filtered_detections = []
+    while detections:
+        # Select the detection with the highest confidence
+        highest_confidence = detections.pop(0)
+        filtered_detections.append(highest_confidence)
+
+        # Calculate IoU between the highest confidence detection and the rest
+        to_remove = []
+        for i, det in enumerate(detections):
+            iou = calculate_iou(highest_confidence[2:], det[2:])  # Assumes x, y are at index 2 and 3
+            if iou > threshold:
+                to_remove.append(i)
+
+        # Remove suppressed detections
+        for i in reversed(to_remove):
+            detections.pop(i)
+
+    return filtered_detections
+
+def calculate_iou(box1, box2):
+    """
+    Calculates the Intersection over Union (IoU) between two bounding boxes.
+
+    Args:
+        box1 (tuple): Coordinates (x1, y1, x2, y2) of the first bounding box.
+        box2 (tuple): Coordinates (x1, y1, x2, y2) of the second bounding box.
+
+    Returns:
+        float: IoU value between the two bounding boxes.
+    """
+    # Calculate intersection coordinates
+    x1 = max(box1[0], box2[0])
+    y1 = max(box1[1], box2[1])
+    x2 = min(box1[2], box2[2])
+    y2 = min(box1[3], box2[3])
+
+    # Calculate intersection and union areas
+    intersection_area = max(0, x2 - x1 + 1) * max(0, y2 - y1 + 1)
+    box1_area = (box1[2] - box1[0] + 1) * (box1[3] - box1[1] + 1)
+    box2_area = (box2[2] - box2[0] + 1) * (box2[3] - box2[1] + 1)
+    union_area = box1_area + box2_area - intersection_area
+
+    return intersection_area / float(union_area)
 @csrf_exempt
+# Define the preprocess function
 def preprocess_image(image):
     # Preprocess the image here...
-    image = image.resize((224, 224))
-    image_tensor = torch.tensor(np.array(image)).permute(2, 0, 1).unsqueeze(0).float()
-    image_tensor /= 255.0
+    preprocess = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+
+    # Apply the preprocess to the image
+    image_tensor = preprocess(image)
+    # Add a batch dimension since models expect it
+    image_tensor = image_tensor.unsqueeze(0)
+
     return image_tensor
 
-def postprocess_predictions(predictions):
-    # Postprocess predictions here...
-    predictions = predictions.argmax(dim=1)
-    recognized_ingredients = [model.config.id2label[pred.item()] for pred in predictions]
-    return recognized_ingredients
+def postprocess_predictions(logits):
+    """Converts model logits to predictions with confidence scores."""
+    probs = torch.nn.functional.softmax(logits, dim=1)
+    top_probs, top_lbl_indices = probs.max(dim=1)
+    labels = [model.config.id2label[idx.item()] for idx in top_lbl_indices]
+    confidences = top_probs.tolist()  # Convert to list of confidence scores
+    return list(zip(labels, confidences))
+
+
+def generate_sliding_windows(image, window_size, stride):
+    """
+    Generates overlapping windows for the sliding window approach and calculates their offsets.
+
+    Args:
+        image (torch.Tensor): The preprocessed image tensor.
+        window_size (int): The width and height of the sliding window.
+        stride (int): The overlapping step size between windows.
+
+    Yields:
+        tuple: (torch.Tensor, int, int) Individual image window tensors, and their x and y offsets.
+    """
+
+    # Extract image dimensions
+    _, C, H, W = image.shape  
+
+    for y in range(0, H - window_size + 1, stride):
+        for x in range(0, W - window_size + 1, stride):
+            window = image[:, :, y:y + window_size, x:x + window_size]
+            yield window, x, y  # Return the window and its offset
 
 @csrf_exempt
 def upload_image(request):
@@ -102,12 +195,50 @@ def upload_image(request):
 
     else:
         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
+# @csrf_exempt
+# def upload_image(request):
+#     if request.method == 'POST':
+#         if 'file' not in request.FILES:
+#             return JsonResponse({'error': 'No file part'}, status=400)
 
-def postprocess_predictions(predictions):
-    # Assuming the model's config includes 'id2label'
-    predictions = predictions.argmax(dim=1)
-    recognized_ingredients = [model.config.id2label[pred.item()] for pred in predictions]
-    return recognized_ingredients
+#         file = request.FILES['file']
+#         image = Image.open(file)
+
+#         # Define the uploads directory path
+#         uploads_dir = os.path.join(settings.BASE_DIR, 'uploads')
+#         # Check if the uploads directory exists, create it if it doesn't
+#         if not os.path.exists(uploads_dir):
+#             os.makedirs(uploads_dir)
+
+#         # Define the full path for saving the image, handling potential file name conflict
+#         save_path = os.path.join(uploads_dir, file.name)
+#         if os.path.exists(save_path):
+#             base, extension = os.path.splitext(file.name)
+#             counter = 1
+#             while os.path.exists(save_path):
+#                 new_filename = f"{base}_{counter}{extension}"
+#                 save_path = os.path.join(uploads_dir, new_filename)
+#                 counter += 1
+
+#         # Save the image
+#         image.save(save_path)
+
+#         # Continue with your image processing
+#         # Assuming feature_extractor and model are correctly defined and loaded
+#         inputs = feature_extractor(images=image, return_tensors="pt")
+#         outputs = model(**inputs)
+
+#         # Assuming postprocess_predictions is defined elsewhere and correctly implemented
+#         predictions = postprocess_predictions(outputs.logits)
+
+#         # Filter predictions based on a confidence threshold (example)
+#         filtered_predictions = [(label, conf) for label, conf in predictions if conf > 0.01]
+
+#         # Return the response
+#         return JsonResponse({'predictions': filtered_predictions, 'saved_to': save_path})
+#     else:
+#         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
+
 
 @login_required
 def update_preferences(request):
