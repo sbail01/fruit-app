@@ -14,11 +14,21 @@ import torch
 import numpy as np  # Ensure NumPy is imported
 import os
 from torchvision import transforms
+from roboflow import Roboflow
+import supervision as sv
+import cv2
+import io
+import json
 
-# Load the Hugging Face model and feature extractor
-model_name = "PedroSampaio/fruits-360-16-7"
-model = AutoModelForImageClassification.from_pretrained(model_name)
-feature_extractor = ViTImageProcessor.from_pretrained(model_name)
+
+# # Load the Hugging Face model and feature extractor
+# model_name = "PedroSampaio/fruits-360-16-7"
+# model = AutoModelForImageClassification.from_pretrained(model_name)
+# feature_extractor = ViTImageProcessor.from_pretrained(model_name)
+rf = Roboflow(api_key="iqS3KNWPgcu9iiGVHlLw")
+project = rf.workspace().project("fruits-and-vegetables-2vf7u")
+model = project.version(1).model
+
 
 def register(request):
     if request.method == 'POST':
@@ -170,31 +180,91 @@ def generate_sliding_windows(image, window_size, stride):
             window = image[:, :, y:y + window_size, x:x + window_size]
             yield window, x, y  # Return the window and its offset
 
+# @csrf_exempt
+# def upload_image(request):
+#     if request.method == 'POST':
+#         if 'file' not in request.FILES:
+#             return JsonResponse({'error': 'No file part'}, status=400)
+
+#         # Load the image file from the request
+#         file = request.FILES['file']
+#         image = Image.open(file).convert('RGB')  # Ensure image is in RGB format
+        
+#         # Preprocess the image using the feature extractor
+#         inputs = feature_extractor(images=image, return_tensors="pt")
+
+#         # Get model predictions
+#         with torch.no_grad():
+#             predictions = model(**inputs)
+
+#         # Post-process the predictions to get human-readable labels
+#         recognized_ingredients = postprocess_predictions(predictions.logits)
+
+#         # Return the predictions as JSON
+#         return JsonResponse({'ingredients': recognized_ingredients})
+
+#     else:
+#         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
+    
+#     result = model.predict("your_image.jpg", confidence=40, overlap=30).json()
 @csrf_exempt
 def upload_image(request):
     if request.method == 'POST':
         if 'file' not in request.FILES:
             return JsonResponse({'error': 'No file part'}, status=400)
 
-        # Load the image file from the request
         file = request.FILES['file']
-        image = Image.open(file).convert('RGB')  # Ensure image is in RGB format
-        
-        # Preprocess the image using the feature extractor
-        inputs = feature_extractor(images=image, return_tensors="pt")
+        image = Image.open(file).convert('RGB')
 
-        # Get model predictions
-        with torch.no_grad():
-            predictions = model(**inputs)
+        # Define the uploads directory path
+        uploads_dir = os.path.join(settings.BASE_DIR, 'uploads')
+        # Check if the uploads directory exists, create it if it doesn't
+        if not os.path.exists(uploads_dir):
+            os.makedirs(uploads_dir)
 
-        # Post-process the predictions to get human-readable labels
-        recognized_ingredients = postprocess_predictions(predictions.logits)
+        # Define the full path for saving the image
+        save_path = os.path.join(uploads_dir, file.name)
+        if os.path.exists(save_path):
+            base, extension = os.path.splitext(file.name)
+            counter = 1
+            while os.path.exists(os.path.join(uploads_dir, f"{base}_{counter}{extension}")):
+                counter += 1
+            new_filename = f"{base}_{counter}{extension}"
+            save_path = os.path.join(uploads_dir, new_filename)
+
+        # Save the image
+        image.save(save_path)
+
+        # Predict using the saved image
+        result = model.predict(save_path, confidence=30, overlap=40)
+
+        # Extract the labels and confidence from the predictions
+        # The previous line had a mistake by trying to access predictions as if they were attributes of an object.
+        # We're now accessing them as keys in a dictionary.
+        predictions = result.predictions if hasattr(result, 'predictions') else []
+        print(predictions)
+        detected_items = [{
+            "class": prediction["class"],  # Corrected attribute access
+            "confidence": prediction["confidence"],
+            "bbox": {
+                "x": prediction["x"],
+                "y": prediction["y"],
+                "width": prediction["width"],
+                "height": prediction["height"]
+            }
+        } for prediction in predictions]
+        # Try to delete the saved image, catch and log any errors
+        try:
+            os.remove(save_path)
+        except Exception as e:
+            print(f"Error deleting the image {save_path}: {e}")
 
         # Return the predictions as JSON
-        return JsonResponse({'ingredients': recognized_ingredients})
+        return JsonResponse({'detected_items': detected_items})
 
     else:
         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
+
 # @csrf_exempt
 # def upload_image(request):
 #     if request.method == 'POST':
@@ -234,10 +304,6 @@ def upload_image(request):
 #         # Filter predictions based on a confidence threshold (example)
 #         filtered_predictions = [(label, conf) for label, conf in predictions if conf > 0.01]
 
-#         # Return the response
-#         return JsonResponse({'predictions': filtered_predictions, 'saved_to': save_path})
-#     else:
-#         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
 
 
 @login_required
