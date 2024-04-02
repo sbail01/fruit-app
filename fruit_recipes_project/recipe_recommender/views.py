@@ -10,6 +10,11 @@ from .forms import UploadPhotoForm, FeedbackForm, ProfileForm, CustomUserChangeF
 from .models import Profile
 from PIL import Image
 from django.conf import settings
+from keras.models import load_model
+from keras.preprocessing import image
+from keras.applications.vgg16 import preprocess_input
+from django.core.files.storage import default_storage
+from keras.preprocessing.image import img_to_array, load_img
 import torch
 import numpy as np  # Ensure NumPy is imported
 import os
@@ -25,10 +30,12 @@ import json
 # model_name = "PedroSampaio/fruits-360-16-7"
 # model = AutoModelForImageClassification.from_pretrained(model_name)
 # feature_extractor = ViTImageProcessor.from_pretrained(model_name)
-rf = Roboflow(api_key="iqS3KNWPgcu9iiGVHlLw")
-project = rf.workspace().project("fruits-and-vegetables-2vf7u")
-model = project.version(1).model
+# rf = Roboflow(api_key="iqS3KNWPgcu9iiGVHlLw")
+# project = rf.workspace().project("fruits-and-vegetables-2vf7u")
+# model = project.version(1).model
 
+# MODEL_PATH = os.path.join(settings.BASE_DIR, 'fruit_cnn_model.h5')
+fruit_model = load_model('C:/Users/Sabrina/Desktop/fruit-app/fruit_recipes_project/fruit_cnn_model.h5')
 
 def register(request):
     if request.method == 'POST':
@@ -135,27 +142,42 @@ def calculate_iou(box1, box2):
     return intersection_area / float(union_area)
 @csrf_exempt
 # Define the preprocess function
-def preprocess_image(image):
-    # Preprocess the image here...
-    preprocess = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
+def preprocess_image(image_path, target_size=(100, 100)):  # Verify the target_size used during training
+    # Load and resize the image
+    img = load_img(image_path, target_size=target_size)
+    img_array = img_to_array(img)
+    
+    # Normalize the image array
+    img_array /= 255.0  # This matches the rescale parameter used during training
+    
+    # Add a batch dimension
+    img_array = np.expand_dims(img_array, axis=0)
+    
+    return img_array
+    # # Preprocess the image here...
+    # preprocess = transforms.Compose([
+    #     transforms.Resize((224, 224)),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    # ])
 
-    # Apply the preprocess to the image
-    image_tensor = preprocess(image)
-    # Add a batch dimension since models expect it
-    image_tensor = image_tensor.unsqueeze(0)
+    # # Apply the preprocess to the image
+    # image_tensor = preprocess(image)
+    # # Add a batch dimension since models expect it
+    # image_tensor = image_tensor.unsqueeze(0)
 
-    return image_tensor
+    # return image_tensor
+
 
 def postprocess_predictions(logits):
     """Converts model logits to predictions with confidence scores."""
     probs = torch.nn.functional.softmax(logits, dim=1)
     top_probs, top_lbl_indices = probs.max(dim=1)
-    labels = [model.config.id2label[idx.item()] for idx in top_lbl_indices]
+    labels = [fruit_model.config.id2label[idx.item()] for idx in top_lbl_indices]
     confidences = top_probs.tolist()  # Convert to list of confidence scores
+    print("Predictions:", postprocess_predictions)
+    print("Predicted class indices:", labels)
+
     return list(zip(labels, confidences))
 
 
@@ -207,64 +229,6 @@ def generate_sliding_windows(image, window_size, stride):
 #         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
     
 #     result = model.predict("your_image.jpg", confidence=40, overlap=30).json()
-@csrf_exempt
-def upload_image(request):
-    if request.method == 'POST':
-        if 'file' not in request.FILES:
-            return JsonResponse({'error': 'No file part'}, status=400)
-
-        file = request.FILES['file']
-        image = Image.open(file).convert('RGB')
-
-        # Define the uploads directory path
-        uploads_dir = os.path.join(settings.BASE_DIR, 'uploads')
-        # Check if the uploads directory exists, create it if it doesn't
-        if not os.path.exists(uploads_dir):
-            os.makedirs(uploads_dir)
-
-        # Define the full path for saving the image
-        save_path = os.path.join(uploads_dir, file.name)
-        if os.path.exists(save_path):
-            base, extension = os.path.splitext(file.name)
-            counter = 1
-            while os.path.exists(os.path.join(uploads_dir, f"{base}_{counter}{extension}")):
-                counter += 1
-            new_filename = f"{base}_{counter}{extension}"
-            save_path = os.path.join(uploads_dir, new_filename)
-
-        # Save the image
-        image.save(save_path)
-
-        # Predict using the saved image
-        result = model.predict(save_path, confidence=30, overlap=40)
-
-        # Extract the labels and confidence from the predictions
-        # The previous line had a mistake by trying to access predictions as if they were attributes of an object.
-        # We're now accessing them as keys in a dictionary.
-        predictions = result.predictions if hasattr(result, 'predictions') else []
-        print(predictions)
-        detected_items = [{
-            "class": prediction["class"],  # Corrected attribute access
-            "confidence": prediction["confidence"],
-            "bbox": {
-                "x": prediction["x"],
-                "y": prediction["y"],
-                "width": prediction["width"],
-                "height": prediction["height"]
-            }
-        } for prediction in predictions]
-        # Try to delete the saved image, catch and log any errors
-        try:
-            os.remove(save_path)
-        except Exception as e:
-            print(f"Error deleting the image {save_path}: {e}")
-
-        # Return the predictions as JSON
-        return JsonResponse({'detected_items': detected_items})
-
-    else:
-        return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
-
 # @csrf_exempt
 # def upload_image(request):
 #     if request.method == 'POST':
@@ -272,7 +236,7 @@ def upload_image(request):
 #             return JsonResponse({'error': 'No file part'}, status=400)
 
 #         file = request.FILES['file']
-#         image = Image.open(file)
+#         image = Image.open(file).convert('RGB')
 
 #         # Define the uploads directory path
 #         uploads_dir = os.path.join(settings.BASE_DIR, 'uploads')
@@ -280,30 +244,113 @@ def upload_image(request):
 #         if not os.path.exists(uploads_dir):
 #             os.makedirs(uploads_dir)
 
-#         # Define the full path for saving the image, handling potential file name conflict
+#         # Define the full path for saving the image
 #         save_path = os.path.join(uploads_dir, file.name)
 #         if os.path.exists(save_path):
 #             base, extension = os.path.splitext(file.name)
 #             counter = 1
-#             while os.path.exists(save_path):
-#                 new_filename = f"{base}_{counter}{extension}"
-#                 save_path = os.path.join(uploads_dir, new_filename)
+#             while os.path.exists(os.path.join(uploads_dir, f"{base}_{counter}{extension}")):
 #                 counter += 1
+#             new_filename = f"{base}_{counter}{extension}"
+#             save_path = os.path.join(uploads_dir, new_filename)
 
 #         # Save the image
 #         image.save(save_path)
 
-#         # Continue with your image processing
-#         # Assuming feature_extractor and model are correctly defined and loaded
-#         inputs = feature_extractor(images=image, return_tensors="pt")
-#         outputs = model(**inputs)
+#         # Predict using the saved image
+#         result = model.predict(save_path, confidence=30, overlap=40)
 
-#         # Assuming postprocess_predictions is defined elsewhere and correctly implemented
-#         predictions = postprocess_predictions(outputs.logits)
+#         # Extract the labels and confidence from the predictions
+#         # The previous line had a mistake by trying to access predictions as if they were attributes of an object.
+#         # We're now accessing them as keys in a dictionary.
+#         predictions = result.predictions if hasattr(result, 'predictions') else []
+#         print(predictions)
+#         detected_items = [{
+#             "class": prediction["class"],  # Corrected attribute access
+#             "confidence": prediction["confidence"],
+#             "bbox": {
+#                 "x": prediction["x"],
+#                 "y": prediction["y"],
+#                 "width": prediction["width"],
+#                 "height": prediction["height"]
+#             }
+#         } for prediction in predictions]
+#         # Try to delete the saved image, catch and log any errors
+#         try:
+#             os.remove(save_path)
+#         except Exception as e:
+#             print(f"Error deleting the image {save_path}: {e}")
 
-#         # Filter predictions based on a confidence threshold (example)
-#         filtered_predictions = [(label, conf) for label, conf in predictions if conf > 0.01]
+#         # Return the predictions as JSON
+#         return JsonResponse({'detected_items': detected_items})
 
+#     else:
+#         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
+
+@csrf_exempt
+def upload_image(request):
+    if request.method == 'POST' and 'file' in request.FILES:
+        file = request.FILES['file']
+        saved_file_path = save_uploaded_file(file)  # Ensure this function is defined correctly
+        
+        # Proceed with preprocessing and predicting using saved_file_path
+        processed_image = preprocess_image(saved_file_path)  # Ensure preprocess_image is implemented correctly
+        predictions = fruit_model.predict(processed_image)
+
+        # Process predictions
+        predicted_probs = predictions[0]  # Assuming predictions is shaped (1, number_of_classes)
+        top_prediction_idx = np.argmax(predicted_probs)
+        top_prediction_prob = float(predicted_probs[top_prediction_idx])
+        class_names = settings.CLASS_NAMES
+        
+        top_prediction_class_name = class_names[top_prediction_idx]
+        
+
+        # You might want to return more information in the JsonResponse
+        return JsonResponse({
+            'top_prediction_class_name': top_prediction_class_name,
+            'top_prediction_prob': top_prediction_prob,
+        })
+    
+    return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
+
+
+
+def save_uploaded_file(uploaded_file):
+    """
+    Saves an uploaded file to the 'uploads' directory and returns the path.
+
+    Args:
+        uploaded_file (InMemoryUploadedFile): The file uploaded by the user.
+
+    Returns:
+        str: The file system path to the saved file.
+    """
+
+    # Define the uploads directory path
+    uploads_dir = os.path.join(settings.BASE_DIR, 'uploads')
+    # Ensure the uploads directory exists
+    if not os.path.exists(uploads_dir):
+        os.makedirs(uploads_dir)
+
+    # Construct the full path for the new file
+    save_path = os.path.join(uploads_dir, uploaded_file.name)
+    
+    # Handle potential filename conflicts
+    if os.path.exists(save_path):
+        base, extension = os.path.splitext(uploaded_file.name)
+        counter = 1
+        while os.path.exists(save_path):
+            new_filename = f"{base}_{counter}{extension}"
+            save_path = os.path.join(uploads_dir, new_filename)
+            counter += 1
+
+    # Save the file
+    with open(save_path, 'wb+') as destination:
+        for chunk in uploaded_file.chunks():
+            destination.write(chunk)
+
+    return save_path
 
 
 @login_required
