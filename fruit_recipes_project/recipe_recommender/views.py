@@ -298,21 +298,20 @@ def upload_image(request):
         predictions = fruit_model.predict(processed_image)
 
         # Process predictions
-        predicted_probs = predictions[0]  # Assuming predictions is shaped (1, number_of_classes)
-        top_prediction_idx = np.argmax(predicted_probs)
-        top_prediction_prob = float(predicted_probs[top_prediction_idx])
-        class_names = settings.CLASS_NAMES
+        predicted_probs = predictions[0].tolist()  # use to list, for JSON serializable
         
-        top_prediction_class_name = class_names[top_prediction_idx]
-        
+        top_k = 5
+        top_indices = np.argsort(predicted_probs)[-top_k:][::-1]
+        top_class_names = [settings.CLASS_NAMES[i] for i in top_indices]
+        top_probabilities = [predicted_probs[i] for i in top_indices]
+        # results into a list of dictionaries
+        predictions_above_threshold = [
+            {'class_name': class_name, 'probability': float(probability)}
+            for class_name, probability in zip(top_class_names, top_probabilities)
+        ]
 
-        # You might want to return more information in the JsonResponse
-        return JsonResponse({
-            'top_prediction_class_name': top_prediction_class_name,
-            'top_prediction_prob': top_prediction_prob,
-        })
-    
-    return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
+        return JsonResponse({'predictions': predictions_above_threshold})
+
 
 
 
