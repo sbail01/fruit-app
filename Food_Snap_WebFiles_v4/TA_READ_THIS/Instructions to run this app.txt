@@ -1,0 +1,63 @@
+
+
+
+
+WELCOME TO:  FOOD SNAP ! 
+
+You will run  our app locally with Flask, but first ......
+
+ ===========================================================================
+ {   INSTALLS - DEPENDENCIES   } 
+===========================================================================
+
+>>>>>>>>---------You will need to Pip install  the following  ( or you may have to do conda install  on Tensor...)
+
+	AT MINIMUM you will need  the following:   pip install imageai  
+	then try to run it, if it fails follow dependcy install below     
+
+	*Python 3.5.1 (and later versions)
+	*Tensorflow 1.4.0 (and later versions) (Tensorflow 2.0 coming soon)
+	* Tensor NOTE: (for this project we ran and trained model with  the following tensor:
+	  if your version doesnt work install this) ---->    install tensorflow-gpu==1.13.1
+	* OpenCV
+	* Keras 2.x
+	* pip install -U tensorflow keras opencv-python
+	* pip install imageai   
+	(OR try below - I think above works )
+	* pip3 install imageai --upgrade
+
+
+
+===========================================================================
+ {   HOW TO WORK OUR APP - ONE MORE DOWNLOAD NEEDED!   } 
+===========================================================================
+
+	(1A.)  You will need to download the model from the google drive account (250mb) and place it in the model folder - do not change file name
+	
+	(1B.)   <<< GOOGLE DRIVE LINK TO MODEL >>>>  ---->       https://drive.google.com/open?id=1hHkTPNduMjAwQ1K9rFfs4WvI_FBx0tRR
+
+	(2.)     Inside the folder "Food_Snap_WebFiles_v4 "          open bash  type :       python app.py
+ 
+	(3.)     Load webpage at:       http://127.0.0.1:5000/
+
+	(4.)     Click on the "Find Image" Button and select any image from the" Image folder" in this project folder ( image1 is a good image to use)
+
+	(5.)     Click   " Upload Image "
+
+	(6.)     Wait 30 seconds , your processed image should appear 
+
+	(7.)     Verify your ingredients in the check box list and hit the "Submit" button ( do not hit submit more than few times a minute, it is api call to external website)
+
+	(8.)     Your recipe should appear below
+
+	(9.)     Hit the "Restart" button at the bottom of page to try another photo, or hit submit again from step 7 for more recipies  to appear 
+
+	(10.)   Make Awesome Food ! 
+
+
+===========================================================================
+ {   LINKS TO IMAGEAI DOCS GIT  } 
+===========================================================================
+https://github.com/OlafenwaMoses/ImageAI#dependencies
+
+https://imageai.readthedocs.io/en/latest/custom/index.html

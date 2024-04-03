@@ -1,0 +1,39 @@
+{
+    "labels" : [
+        "bacon",
+        "cheese",
+        "ground_beef",
+        "hamburger_buns",
+        "lettuce",
+        "onions",
+        "spaghetti_noodles",
+        "tomatoes",
+        "tortillas"
+    ],
+    "anchors" : [
+        [
+            267,
+            98,
+            324,
+            190,
+            349,
+            331
+        ],
+        [
+            140,
+            291,
+            189,
+            179,
+            247,
+            296
+        ],
+        [
+            64,
+            76,
+            105,
+            166,
+            130,
+            97
+        ]
+    ]
+}
