@@ -145,18 +145,6 @@ def calculate_iou(box1, box2):
 @csrf_exempt
 # Define the preprocess function
 def preprocess_image(image_path, target_size=(100, 100)):  # Verify the target_size used during training
-    # # Load and resize the image
-    # img = load_img(image_path, target_size=target_size)
-    # img_array = img_to_array(img)
-    
-    # # Normalize the image array
-    # img_array /= 255.0  # This matches the rescale parameter used during training
-    
-    # # Add a batch dimension
-    # img_array = np.expand_dims(img_array, axis=0)
-    
-    # return img_array
-    # Preprocess the image here...
     preprocess = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -204,33 +192,6 @@ def generate_sliding_windows(image, window_size, stride):
             window = image[:, :, y:y + window_size, x:x + window_size]
             yield window, x, y  # Return the window and its offset
 
-# @csrf_exempt
-# def upload_image(request):
-#     if request.method == 'POST':
-#         if 'file' not in request.FILES:
-#             return JsonResponse({'error': 'No file part'}, status=400)
-
-#         # Load the image file from the request
-#         file = request.FILES['file']
-#         image = Image.open(file).convert('RGB')  # Ensure image is in RGB format
-        
-#         # Preprocess the image using the feature extractor
-#         inputs = feature_extractor(images=image, return_tensors="pt")
-
-#         # Get model predictions
-#         with torch.no_grad():
-#             predictions = model(**inputs)
-
-#         # Post-process the predictions to get human-readable labels
-#         recognized_ingredients = postprocess_predictions(predictions.logits)
-
-#         # Return the predictions as JSON
-#         return JsonResponse({'ingredients': recognized_ingredients})
-
-#     else:
-#         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
-    
-#     result = model.predict("your_image.jpg", confidence=40, overlap=30).json()
 @csrf_exempt
 def upload_image(request):
     if request.method == 'POST':
@@ -288,31 +249,6 @@ def upload_image(request):
 
     else:
         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
-
-# @csrf_exempt
-# def upload_image(request):
-#     if request.method == 'POST' and 'file' in request.FILES:
-#         file = request.FILES['file']
-#         saved_file_path = save_uploaded_file(file)  # Ensure this function is defined correctly
-        
-#         # Proceed with preprocessing and predicting using saved_file_path
-#         processed_image = preprocess_image(saved_file_path)  # Ensure preprocess_image is implemented correctly
-#         predictions = fruit_model.predict(processed_image)
-
-#         # Process predictions
-#         predicted_probs = predictions[0].tolist()  # use to list, for JSON serializable
-        
-#         top_k = 5
-#         top_indices = np.argsort(predicted_probs)[-top_k:][::-1]
-#         top_class_names = [settings.CLASS_NAMES[i] for i in top_indices]
-#         top_probabilities = [predicted_probs[i] for i in top_indices]
-#         # results into a list of dictionaries
-#         predictions_above_threshold = [
-#             {'class_name': class_name, 'probability': float(probability)}
-#             for class_name, probability in zip(top_class_names, top_probabilities)
-#         ]
-
-#         return JsonResponse({'predictions': predictions_above_threshold})
 
 
 

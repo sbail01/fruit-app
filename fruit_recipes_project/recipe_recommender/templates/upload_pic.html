@@ -187,62 +187,59 @@
     </style>
 </head>
 <body>
-<div class="switch-container">
-    <label for="togBtn">Click & Upload</label>
-    <label class="switch">
-        <input type="checkbox" id="togBtn">
-        <span class="slider round"></span>
-    </label>
-    <label for="togBtn">Upload from Device</label>
-</div>
+    <div class="switch-container">
+        <label for="togBtn">Click & Upload</label>
+        <label class="switch">
+            <input type="checkbox" id="togBtn">
+            <span class="slider round"></span>
+        </label>
+        <label for="togBtn">Upload from Device</label>
+    </div>
 
-<div id="camera-container">
-    <video id="camera" autoplay></video>
-    <button id="capture">Capture Photo</button>
-    <button id="switchCamera">Switch Camera</button>
-    <canvas id="canvas"></canvas>
-</div>
+    <div id="camera-container">
+        <video id="camera" autoplay></video>
+        <button id="capture">Capture Photo</button>
+        <button id="switchCamera">Switch Camera</button>
+        <canvas id="canvas" style="display:none;"></canvas>
+    </div>
 
-<div id="drop-area" style="display: flex;">
-    <p>Drag and Drop file here or click to browse</p>
-    <input type="file" id="fileElem" multiple accept="image/*">
-</div>
+    <div id="drop-area" style="display: flex;">
+        <p>Drag and Drop file here or click to browse</p>
+        <input type="file" id="fileElem" multiple accept="image/*">
+    </div>
 
-<!-- The Modal -->
-<div id="myModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Preview</h2>
-            <span class="close">&times;</span>
-        </div>
-        <div class="modal-body">
-            <img id="image-preview" class="image-preview">
-        </div>
-        <div class="modal-footer">
-            <form id="uploadForm" action="upload/" method="post" enctype="multipart/form-data">
-                <!-- The CSRF token should be included if this form is part of a Django template -->
-                <input type="file" id="imageInput" name="image" style="display: none;"/>
-                <button type="button" id="uploadBtn">Upload</button>
+    <!-- The Modal for Preview and Data Edit -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Preview and Edit Data</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <img id="image-preview" class="image-preview" style="display:none;">
+                <!-- Editable Data List Will Be Populated Here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="saveDataBtn">Save</button>
                 <button type="button" id="cancelBtn">Cancel</button>
-            </form>
-            
+            </div>
         </div>
     </div>
-</div>
-
 <script>
-    const togBtn = document.getElementById('togBtn');
-    const cameraContainer = document.getElementById('camera-container');
-    const dropArea = document.getElementById('drop-area');
-    const camera = document.getElementById('camera');
-    const canvas = document.getElementById('canvas');
-    const capture = document.getElementById('capture');
-    const fileElem = document.getElementById('fileElem');
-    const modal = document.getElementById('myModal');
-    const closeBtn = document.getElementsByClassName('close')[0];
-    const uploadBtn = document.getElementById('uploadBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const imagePreview = document.getElementById('image-preview');
+            const togBtn = document.getElementById('togBtn');
+            const cameraContainer = document.getElementById('camera-container');
+            const dropArea = document.getElementById('drop-area');
+            const camera = document.getElementById('camera');
+            const canvas = document.getElementById('canvas');
+            const capture = document.getElementById('capture');
+            const fileElem = document.getElementById('fileElem');
+            const modal = document.getElementById('myModal');
+            const closeBtn = modal.querySelector('.close');
+            const saveDataBtn = modal.querySelector('#saveDataBtn');
+            const cancelBtn = modal.querySelector('#cancelBtn');
+            const imagePreview = document.getElementById('image-preview');
+            let imageDataUrl; // Global variable to store the data URL of the image
+
     let useFrontCamera = true; // Flag to toggle between cameras
 
 document.getElementById('switchCamera').addEventListener('click', function() {
@@ -329,15 +326,18 @@ function stopCamera() {
             const reader = new FileReader();
             reader.onload = function(e) {
                 displayImage(e.target.result);
+                imageDataUrl=e.target.result;
+
             };
             reader.readAsDataURL(file);
         }
     }
 
     function displayImage(src) {
-        imagePreview.src = src;
-        modal.style.display = "block";
-    }
+    imagePreview.src = src;
+    imagePreview.style.display = "block"; // Make sure to show the image
+    modal.style.display = "block";
+}
 
     closeBtn.onclick = function() {
         modal.style.display = "none";
@@ -414,12 +414,100 @@ function stopCamera() {
                 throw new Error('Network response was not ok.');
             })
             .then(data => {
-                console.log('Success:', data);
+                console.log('Success:', data.detected_items);
+                showModalWithData(data.detected_items, imageDataUrl); // Pass the data URL to the function
                 // Further processing if needed
             })
             .catch((error) => {
                 console.error('Error:', error);
             });
+            function showModalWithData(detectedItems, imageDataUrl) {
+    const modalBody = modal.querySelector('.modal-body');
+    modalBody.innerHTML = ''; // Clear existing content
+
+    // Create and append the preview image if imageDataUrl is provided
+    if (imageDataUrl) {
+        const previewImage = document.createElement('img');
+        previewImage.src = imageDataUrl;
+        previewImage.style.maxWidth = '100%'; // Ensure the image fits within the modal
+        previewImage.style.borderRadius = '4px'; // Optional: add some styling
+        previewImage.style.marginBottom = '20px'; // Add spacing between image and the rest of the content
+        modalBody.appendChild(previewImage);
+    }
+
+    // Create an input field for adding new items
+    const inputContainer = document.createElement('div');
+    inputContainer.innerHTML = `
+        <input type="text" id="newItemInput" placeholder="Add new item" />
+        <button id="addItemBtn">Add</button>
+    `;
+    modalBody.appendChild(inputContainer);
+
+    // Handle adding new items
+    document.getElementById('addItemBtn').addEventListener('click', function() {
+        const newItem = document.getElementById('newItemInput').value.trim();
+        if (newItem) {
+            detectedItems.push({ class: newItem, confidence: 1 }); // Assuming a default confidence for new items
+            updateDetectedItemsList(detectedItems); // Refresh the list
+        }
+    });
+
+    // Create a container for items
+    const itemsContainer = document.createElement('div');
+    itemsContainer.id = 'itemsContainer';
+    modalBody.appendChild(itemsContainer);
+
+    // Function to update the list of detected items
+    function updateDetectedItemsList(items) {
+        const container = document.getElementById('itemsContainer');
+        container.innerHTML = ''; // Clear the container
+
+        items.forEach((item, index) => {
+            // Create an element for each detected item
+            const itemElement = document.createElement('div');
+            itemElement.style.marginBottom = '20px'; // Add some spacing
+
+            // Add content with item details and a remove button
+            itemElement.innerHTML = `
+                <div><strong>Item:</strong> ${item.class}</div>
+                <div><strong>Confidence:</strong> ${(item.confidence * 100).toFixed(2)}%</div>
+                <button class="removeItemBtn" data-index="${index}">Remove</button>
+            `;
+
+            container.appendChild(itemElement);
+        });
+
+        // Attach click event listeners to remove buttons
+        document.querySelectorAll('.removeItemBtn').forEach(button => {
+            button.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'), 10);
+                detectedItems.splice(index, 1); // Remove the item from the list
+                updateDetectedItemsList(detectedItems); // Refresh the list
+            });
+        });
+    }
+
+    // Initially populate the list with detected items
+    updateDetectedItemsList(detectedItems);
+
+    modal.style.display = 'block';
+}
+
+
+        fileElem.addEventListener('change', function(e) {
+            handleFiles(e.target.files);
+        });
+
+    // Close modal functionality (assuming closeBtn and modal variables are defined)
+    closeBtn.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
         }
 
         // Event listener for the upload button
