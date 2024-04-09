@@ -28,14 +28,16 @@ import json
 
 # # Load the Hugging Face model and feature extractor
 # model_name = "PedroSampaio/fruits-360-16-7"
+
 # model = AutoModelForImageClassification.from_pretrained(model_name)
 # feature_extractor = ViTImageProcessor.from_pretrained(model_name)
-# rf = Roboflow(api_key="iqS3KNWPgcu9iiGVHlLw")
-# project = rf.workspace().project("fruits-and-vegetables-2vf7u")
-# model = project.version(1).model
+
+rf = Roboflow(api_key="iqS3KNWPgcu9iiGVHlLw")
+project = rf.workspace().project("fruits-and-vegetables-2vf7u")
+model = project.version(1).model
 
 # MODEL_PATH = os.path.join(settings.BASE_DIR, 'fruit_cnn_model.h5')
-fruit_model = load_model('C:/Users/Sabrina/Desktop/fruit-app/fruit_recipes_project/fruit_cnn_model.h5')
+# fruit_model = load_model('C:/Users/Sabrina/Desktop/fruit-app/fruit_recipes_project/fruit_cnn_model.h5')
 
 def register(request):
     if request.method == 'POST':
@@ -143,37 +145,37 @@ def calculate_iou(box1, box2):
 @csrf_exempt
 # Define the preprocess function
 def preprocess_image(image_path, target_size=(100, 100)):  # Verify the target_size used during training
-    # Load and resize the image
-    img = load_img(image_path, target_size=target_size)
-    img_array = img_to_array(img)
+    # # Load and resize the image
+    # img = load_img(image_path, target_size=target_size)
+    # img_array = img_to_array(img)
     
-    # Normalize the image array
-    img_array /= 255.0  # This matches the rescale parameter used during training
+    # # Normalize the image array
+    # img_array /= 255.0  # This matches the rescale parameter used during training
     
-    # Add a batch dimension
-    img_array = np.expand_dims(img_array, axis=0)
+    # # Add a batch dimension
+    # img_array = np.expand_dims(img_array, axis=0)
     
-    return img_array
-    # # Preprocess the image here...
-    # preprocess = transforms.Compose([
-    #     transforms.Resize((224, 224)),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    # ])
+    # return img_array
+    # Preprocess the image here...
+    preprocess = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
 
-    # # Apply the preprocess to the image
-    # image_tensor = preprocess(image)
-    # # Add a batch dimension since models expect it
-    # image_tensor = image_tensor.unsqueeze(0)
+    # Apply the preprocess to the image
+    image_tensor = preprocess(image)
+    # Add a batch dimension since models expect it
+    image_tensor = image_tensor.unsqueeze(0)
 
-    # return image_tensor
+    return image_tensor
 
 
 def postprocess_predictions(logits):
     """Converts model logits to predictions with confidence scores."""
     probs = torch.nn.functional.softmax(logits, dim=1)
     top_probs, top_lbl_indices = probs.max(dim=1)
-    labels = [fruit_model.config.id2label[idx.item()] for idx in top_lbl_indices]
+    labels = [model.config.id2label[idx.item()] for idx in top_lbl_indices]
     confidences = top_probs.tolist()  # Convert to list of confidence scores
     print("Predictions:", postprocess_predictions)
     print("Predicted class indices:", labels)
@@ -229,88 +231,88 @@ def generate_sliding_windows(image, window_size, stride):
 #         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
     
 #     result = model.predict("your_image.jpg", confidence=40, overlap=30).json()
-# @csrf_exempt
-# def upload_image(request):
-#     if request.method == 'POST':
-#         if 'file' not in request.FILES:
-#             return JsonResponse({'error': 'No file part'}, status=400)
-
-#         file = request.FILES['file']
-#         image = Image.open(file).convert('RGB')
-
-#         # Define the uploads directory path
-#         uploads_dir = os.path.join(settings.BASE_DIR, 'uploads')
-#         # Check if the uploads directory exists, create it if it doesn't
-#         if not os.path.exists(uploads_dir):
-#             os.makedirs(uploads_dir)
-
-#         # Define the full path for saving the image
-#         save_path = os.path.join(uploads_dir, file.name)
-#         if os.path.exists(save_path):
-#             base, extension = os.path.splitext(file.name)
-#             counter = 1
-#             while os.path.exists(os.path.join(uploads_dir, f"{base}_{counter}{extension}")):
-#                 counter += 1
-#             new_filename = f"{base}_{counter}{extension}"
-#             save_path = os.path.join(uploads_dir, new_filename)
-
-#         # Save the image
-#         image.save(save_path)
-
-#         # Predict using the saved image
-#         result = model.predict(save_path, confidence=30, overlap=40)
-
-#         # Extract the labels and confidence from the predictions
-#         # The previous line had a mistake by trying to access predictions as if they were attributes of an object.
-#         # We're now accessing them as keys in a dictionary.
-#         predictions = result.predictions if hasattr(result, 'predictions') else []
-#         print(predictions)
-#         detected_items = [{
-#             "class": prediction["class"],  # Corrected attribute access
-#             "confidence": prediction["confidence"],
-#             "bbox": {
-#                 "x": prediction["x"],
-#                 "y": prediction["y"],
-#                 "width": prediction["width"],
-#                 "height": prediction["height"]
-#             }
-#         } for prediction in predictions]
-#         # Try to delete the saved image, catch and log any errors
-#         try:
-#             os.remove(save_path)
-#         except Exception as e:
-#             print(f"Error deleting the image {save_path}: {e}")
-
-#         # Return the predictions as JSON
-#         return JsonResponse({'detected_items': detected_items})
-
-#     else:
-#         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
-
 @csrf_exempt
 def upload_image(request):
-    if request.method == 'POST' and 'file' in request.FILES:
+    if request.method == 'POST':
+        if 'file' not in request.FILES:
+            return JsonResponse({'error': 'No file part'}, status=400)
+
         file = request.FILES['file']
-        saved_file_path = save_uploaded_file(file)  # Ensure this function is defined correctly
-        
-        # Proceed with preprocessing and predicting using saved_file_path
-        processed_image = preprocess_image(saved_file_path)  # Ensure preprocess_image is implemented correctly
-        predictions = fruit_model.predict(processed_image)
+        image = Image.open(file).convert('RGB')
 
-        # Process predictions
-        predicted_probs = predictions[0].tolist()  # use to list, for JSON serializable
-        
-        top_k = 5
-        top_indices = np.argsort(predicted_probs)[-top_k:][::-1]
-        top_class_names = [settings.CLASS_NAMES[i] for i in top_indices]
-        top_probabilities = [predicted_probs[i] for i in top_indices]
-        # results into a list of dictionaries
-        predictions_above_threshold = [
-            {'class_name': class_name, 'probability': float(probability)}
-            for class_name, probability in zip(top_class_names, top_probabilities)
-        ]
+        # Define the uploads directory path
+        uploads_dir = os.path.join(settings.BASE_DIR, 'uploads')
+        # Check if the uploads directory exists, create it if it doesn't
+        if not os.path.exists(uploads_dir):
+            os.makedirs(uploads_dir)
 
-        return JsonResponse({'predictions': predictions_above_threshold})
+        # Define the full path for saving the image
+        save_path = os.path.join(uploads_dir, file.name)
+        if os.path.exists(save_path):
+            base, extension = os.path.splitext(file.name)
+            counter = 1
+            while os.path.exists(os.path.join(uploads_dir, f"{base}_{counter}{extension}")):
+                counter += 1
+            new_filename = f"{base}_{counter}{extension}"
+            save_path = os.path.join(uploads_dir, new_filename)
+
+        # Save the image
+        image.save(save_path)
+
+        # Predict using the saved image
+        result = model.predict(save_path, confidence=30, overlap=40)
+
+        # Extract the labels and confidence from the predictions
+        # The previous line had a mistake by trying to access predictions as if they were attributes of an object.
+        # We're now accessing them as keys in a dictionary.
+        predictions = result.predictions if hasattr(result, 'predictions') else []
+        print(predictions)
+        detected_items = [{
+            "class": prediction["class"],  # Corrected attribute access
+            "confidence": prediction["confidence"],
+            "bbox": {
+                "x": prediction["x"],
+                "y": prediction["y"],
+                "width": prediction["width"],
+                "height": prediction["height"]
+            }
+        } for prediction in predictions]
+        # Try to delete the saved image, catch and log any errors
+        try:
+            os.remove(save_path)
+        except Exception as e:
+            print(f"Error deleting the image {save_path}: {e}")
+
+        # Return the predictions as JSON
+        return JsonResponse({'detected_items': detected_items})
+
+    else:
+        return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
+
+# @csrf_exempt
+# def upload_image(request):
+#     if request.method == 'POST' and 'file' in request.FILES:
+#         file = request.FILES['file']
+#         saved_file_path = save_uploaded_file(file)  # Ensure this function is defined correctly
+        
+#         # Proceed with preprocessing and predicting using saved_file_path
+#         processed_image = preprocess_image(saved_file_path)  # Ensure preprocess_image is implemented correctly
+#         predictions = fruit_model.predict(processed_image)
+
+#         # Process predictions
+#         predicted_probs = predictions[0].tolist()  # use to list, for JSON serializable
+        
+#         top_k = 5
+#         top_indices = np.argsort(predicted_probs)[-top_k:][::-1]
+#         top_class_names = [settings.CLASS_NAMES[i] for i in top_indices]
+#         top_probabilities = [predicted_probs[i] for i in top_indices]
+#         # results into a list of dictionaries
+#         predictions_above_threshold = [
+#             {'class_name': class_name, 'probability': float(probability)}
+#             for class_name, probability in zip(top_class_names, top_probabilities)
+#         ]
+
+#         return JsonResponse({'predictions': predictions_above_threshold})
 
 
 
