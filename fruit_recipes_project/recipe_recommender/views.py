@@ -211,7 +211,23 @@ def save_csv(request):
 
             # Check if the CSV file exists to decide on writing the header
             write_header = not os.path.exists(csv_file_path)
+            csv_file_path = 'detected_items.csv'
+            write_header = not os.path.exists(csv_file_path)
 
+            # Read the existing CSV and check the number of entries
+            with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
+                reader = csv.reader(file)
+                rows = list(reader)
+                if len(rows) > 300:  # Assuming the first row is the header
+                    # Delete the image corresponding to the topmost entry
+                    if os.path.exists(rows[1][0]):
+                        os.remove(rows[1][0])  # rows[1][0] is the image path of the first data row
+                    rows.pop(1)  # Remove the topmost data entry
+
+            # Write the updated data back to the CSV
+            with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+                writer.writerows(rows)
             with open(csv_file_path, mode='a', newline='', encoding='utf-8') as file:
                 writer = csv.writer(file)
 
@@ -276,11 +292,11 @@ def upload_image(request):
                 "height": prediction["height"]
             }
         } for prediction in predictions]
-        # Try to delete the saved image, catch and log any errors
-        try:
-            os.remove(save_path)
-        except Exception as e:
-            print(f"Error deleting the image {save_path}: {e}")
+        # # Try to delete the saved image, catch and log any errors
+        # try:
+        #     os.remove(save_path)
+        # except Exception as e:
+        #     print(f"Error deleting the image {save_path}: {e}")
 
         # Return the predictions as JSON
         return JsonResponse({'detected_items': detected_items,'save_path':save_path})
