@@ -21,9 +21,10 @@ import os
 from torchvision import transforms
 from roboflow import Roboflow
 import supervision as sv
-import cv2
-import io
+import csv
+from django.http import JsonResponse
 import json
+from django.views.decorators.csrf import csrf_exempt
 
 
 # # Load the Hugging Face model and feature extractor
@@ -193,6 +194,43 @@ def generate_sliding_windows(image, window_size, stride):
             yield window, x, y  # Return the window and its offset
 
 @csrf_exempt
+def save_csv(request):
+    if request.method == "POST":
+        try:
+            # Parsing JSON data from request body
+            data = json.loads(request.body.decode('utf-8'))
+            image_path = data.get('image_path', '')  # Default to empty string if not found
+            detected_items = data.get('detected_items', [])  # Default to empty list if not found
+
+            # Debug print statements (consider removing in production)
+            print("image_path:",image_path)
+            print("detected_items:",detected_items)
+
+            # CSV file path, adjust the path as necessary
+            csv_file_path = 'detected_items.csv'
+
+            # Check if the CSV file exists to decide on writing the header
+            write_header = not os.path.exists(csv_file_path)
+
+            with open(csv_file_path, mode='a', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+
+                # If the file is newly created, write the header
+                if write_header:
+                    header = ['Image Path'] + [f'Item {i+1}' for i in range(len(detected_items))]
+                    writer.writerow(header)
+
+                # Writing data row
+                row = [image_path] + detected_items
+                writer.writerow(row)
+
+            return JsonResponse({"success": True, "message": "Data successfully added to CSV."})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)}, status=400)
+    else:
+        return JsonResponse({"success": False, "message": "Invalid request method."}, status=405) 
+
+@csrf_exempt
 def upload_image(request):
     if request.method == 'POST':
         if 'file' not in request.FILES:
@@ -245,7 +283,7 @@ def upload_image(request):
             print(f"Error deleting the image {save_path}: {e}")
 
         # Return the predictions as JSON
-        return JsonResponse({'detected_items': detected_items})
+        return JsonResponse({'detected_items': detected_items,'save_path':save_path})
 
     else:
         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)

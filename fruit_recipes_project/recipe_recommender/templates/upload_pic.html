@@ -248,8 +248,32 @@
       const previewModal = document.getElementById("previewModal"); // The non-editable modal
       let imageDataUrl; // Global variable to store the data URL of the image
       let imageSrc;
+      let image_path;
+      let detected_items;
+      let class_list = [];
+
       saveDataBtn.addEventListener("click", function () {
-        // Perform save operation...
+        // console.log(postData);
+        // Making the fetch call
+        fetch("/upload/save/", {
+          method: "POST", // Indicating the method of the request
+          headers: {
+            "Content-Type": "application/json", // Indicating the type of content being sent
+            // Include CSRF token header if needed; adjust the token retrieval as per your setup
+            // 'X-CSRFToken': csrftoken,
+          },
+          body: JSON.stringify({
+            image_path: image_path,
+            detected_items: class_list,
+          }),
+        })
+          .then((response) => response.json()) // Parsing the JSON response
+          .then((data) => {
+            console.log("Success:", data.success); // Handling the success response
+          })
+          .catch((error) => {
+            console.error("Error:", error); // Handling errors
+          });
 
         // After saving, close the modal and clear the image preview
         modal.style.display = "none";
@@ -499,6 +523,13 @@
           .then((data) => {
             console.log("Success:", data.detected_items);
             showModalWithData(data.detected_items, imageDataUrl); // Pass the data URL to the function
+            detectedItems = data.detected_items;
+            detectedItems.forEach((element) => {
+              console.log(element.class);
+              class_list.push(element.class);
+            });
+            image_path = data.save_path;
+            console.log(`save_path: ${data.save_path}`);
             // Further processing if needed
           })
           .catch((error) => {
@@ -543,6 +574,7 @@
                 .value.trim();
               if (newItem) {
                 detectedItems.push({ class: newItem, confidence: 1 }); // Assuming a default confidence for new items
+                class_list.push(newItem);
                 updateDetectedItemsList(detectedItems); // Refresh the list
               }
             });
