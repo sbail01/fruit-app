@@ -8,6 +8,7 @@ urlpatterns = [
     path('update_preferences/', views.update_preferences, name='update_preferences'),
     path('pic-uploading-page/',upload_photo, name='upload_photo'),
     path('upload/', views.upload_image, name='upload_image'),
+    path('upload/save/',views,name='save'),
     path('register/', register, name='register'),
     path('', views.home_view, name='home'),
     path('accounts/profile/', profile_view, name='profile'),
