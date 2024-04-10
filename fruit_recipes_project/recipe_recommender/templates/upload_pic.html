@@ -1,436 +1,653 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Upload or Capture Photo</title>
     <style>
-        /* Base styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 10px;
-            background-color: #f7f7f7;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-        .capture {
-            /* Center the capture button with padding */
-            display: flex;
-            justify-content: center;
-            padding-top: 2%;
-        }
-        #capture {
-            /* Place the capture button in the center */
-            margin: 20px auto; /* Center button with auto margin and some space */
-        }
-        .switch-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
+      /* Base styles */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 10px;
+        background-color: #f7f7f7;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        overflow: hidden;
+      }
+      .capture {
+        /* Center the capture button with padding */
+        display: flex;
+        justify-content: center;
+        padding-top: 2%;
+      }
+      #capture {
+        /* Place the capture button in the center */
+        margin: 20px auto; /* Center button with auto margin and some space */
+      }
+      .switch-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
 
-        .switch-container label {
-            margin: 0 10px;
-            font-size: 14px;
-        }
+      .switch-container label {
+        margin: 0 10px;
+        font-size: 14px;
+      }
 
-        /* Style the switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-        .switch input { display: none; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; bottom: 0; left: 0; right: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
+      /* Style the switch */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
+      .switch input {
+        display: none;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 34px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: #2196f3;
+      }
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
 
-        /* Styles for drop area and camera */
-        #drop-area, #camera-container {
-            border: 2px dashed #ccc;
-            border-radius: 20px;
-            padding: 20px;
-            width: 90%; /* Responsive width */
-            max-width: 520px; /* Maximum fixed width */
-            min-height: 100px;
-            height:auto;
-            background-color: #fff;
-            cursor: pointer;
-            display: none; /* Hidden by default */
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        #drop-area.highlight {
-            border-color: blue;
-            background-color: #e8f0fe;
-        }
-        #camera, #canvas {
-            display: none; /* Camera hidden by default */
-            width: 90%; /* Responsive width */
-            justify-content: center;
-            max-width: 520px; /* Maximum fixed width */
-            height: auto;
-        }
+      /* Styles for drop area and camera */
+      #drop-area,
+      #camera-container {
+        border: 2px dashed #ccc;
+        border-radius: 20px;
+        padding: 20px;
+        width: 90%; /* Responsive width */
+        max-width: 520px; /* Maximum fixed width */
+        min-height: 100px;
+        height: auto;
+        background-color: #fff;
+        cursor: pointer;
+        display: none; /* Hidden by default */
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      #drop-area.highlight {
+        border-color: blue;
+        background-color: #e8f0fe;
+      }
+      #camera,
+      #canvas {
+        display: none; /* Camera hidden by default */
+        width: 60%; /* Responsive width */
+        justify-content: center;
+        max-width: 520px; /* Maximum fixed width */
+        height: auto;
+      }
 
-        #camera-container {
-            display: flex; /* Camera container hidden by default */
-            justify-content: center;
-        }
+      #camera-container {
+        display: flex; /* Camera container hidden by default */
+        justify-content: center;
+      }
 
-        /* Modal styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: hidden; /* Enable scroll if needed */
-            background-color: rgb(0, 0, 0); /* Fallback color */
-            background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
-            padding-top: 60px;
-        }
+      /* Modal styles */
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: hidden; /* Enable scroll if needed */
+        background-color: rgb(0, 0, 0); /* Fallback color */
+        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+        padding-top: 60px;
+      }
 
-        .modal-body {
-            max-height: 70vh; /* sets a maximum height relative to the viewport */
-            overflow-y: hidden; /* allows scrolling within the modal body if the content is too tall */
-        }
+      .modal-body {
+        max-height: 70vh; /* sets a maximum height relative to the viewport */
+        overflow-y: scroll; /* allows scrolling within the modal body if the content is too tall */
+      }
 
+      .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 70%;
+        max-height: 600px;
+        max-width: 600px;
+      }
 
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 90%;
-            max-height: 600px;
-            max-width: 600px;
-        }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+      .modal-header h2 {
+        margin: 0;
+      }
 
-        .modal-header h2 {
-            margin: 0;
-        }
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+      }
 
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-        }
+      .modal-footer button {
+        margin-left: 10px;
+      }
 
-        .modal-footer button {
-            margin-left: 10px;
-        }
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
 
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
+      .close:hover,
+      .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
 
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .image-preview {
-            max-width: 100%; /* ensures the image is never wider than the container */
-            max-height: 70vh; /* sets a maximum height relative to the viewport */
-            height: auto; /* maintains the aspect ratio */
-            border-radius: 4px;
-            display: flex; /* prevents inline gaps */
-            margin: auto; /* centers image in the available space */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Optional: adds a shadow for some depth */
-        }
-
-
+      .image-preview {
+        max-width: 60%; /* ensures the image is never wider than the container */
+        max-height: 40vh; /* sets a maximum height relative to the viewport */
+        height: auto; /* maintains the aspect ratio */
+        border-radius: 4px;
+        display: flex; /* prevents inline gaps */
+        margin: auto; /* centers image in the available space */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: adds a shadow for some depth */
+      }
     </style>
-</head>
-<body>
-<div class="switch-container">
-    <label for="togBtn">Click & Upload</label>
-    <label class="switch">
-        <input type="checkbox" id="togBtn">
+  </head>
+  <body>
+    <div class="switch-container">
+      <label for="togBtn">Click & Upload</label>
+      <label class="switch">
+        <input type="checkbox" id="togBtn" />
         <span class="slider round"></span>
-    </label>
-    <label for="togBtn">Upload from Device</label>
-</div>
+      </label>
+      <label for="togBtn">Upload from Device</label>
+    </div>
 
-<div id="camera-container">
-    <video id="camera" autoplay></video>
-    <button id="capture">Capture Photo</button>
-    <button id="switchCamera">Switch Camera</button>
-    <canvas id="canvas"></canvas>
-</div>
+    <div id="camera-container">
+      <video id="camera" autoplay></video>
+      <button id="capture">Capture Photo</button>
+      <button id="switchCamera">Switch Camera</button>
+      <canvas id="canvas"></canvas>
+    </div>
 
-<div id="drop-area" style="display: flex;">
-    <p>Drag and Drop file here or click to browse</p>
-    <input type="file" id="fileElem" multiple accept="image/*">
-</div>
+    <div id="drop-area" style="display: flex">
+      <p>Drag and Drop file here or click to browse</p>
+      <input type="file" id="fileElem" multiple accept="image/*" />
+    </div>
 
-<!-- The Modal -->
-<div id="myModal" class="modal">
-    <div class="modal-content">
+    <!-- The Modal for Preview and Data Edit -->
+    <div id="myModal" class="modal">
+      <div class="modal-content">
         <div class="modal-header">
-            <h2>Preview</h2>
-            <span class="close">&times;</span>
+          <h2>Preview and Edit Data</h2>
+          <span class="close">&times;</span>
         </div>
         <div class="modal-body">
-            <img id="image-preview" class="image-preview">
+          <img id="image-preview" class="image-preview" style="display: none" />
+          <!-- Editable Data List Will Be Populated Here -->
         </div>
         <div class="modal-footer">
-            <form id="uploadForm" action="upload/" method="post" enctype="multipart/form-data">
-                <!-- The CSRF token should be included if this form is part of a Django template -->
-                <input type="file" id="imageInput" name="image" style="display: none;"/>
-                <button type="button" id="uploadBtn">Upload</button>
-                <button type="button" id="cancelBtn">Cancel</button>
-            </form>
-            
+          <button type="button" id="saveDataBtn">Save</button>
+          <button type="button" id="cancelBtn">Cancel</button>
         </div>
+      </div>
     </div>
-</div>
+    <script>
+      const togBtn = document.getElementById("togBtn");
+      const cameraContainer = document.getElementById("camera-container");
+      const dropArea = document.getElementById("drop-area");
+      const camera = document.getElementById("camera");
+      const canvas = document.getElementById("canvas");
+      const capture = document.getElementById("capture");
+      const fileElem = document.getElementById("fileElem");
+      const modal = document.getElementById("myModal");
+      const myModal = document.getElementById("myModal"); // The editable modal
+      const closeBtn = modal.querySelector(".close");
+      const saveDataBtn = modal.querySelector("#saveDataBtn");
+      const uploadBtn = document.getElementById("uploadBtn");
+      const cancelBtn = modal.querySelector("#cancelBtn");
+      const imageInput = document.getElementById("imageInput");
+      const imagePreview = document.getElementById("image-preview");
+      const previewModal = document.getElementById("previewModal"); // The non-editable modal
+      let imageDataUrl; // Global variable to store the data URL of the image
+      let imageSrc;
+      let image_path;
+      let detected_items;
+      let class_list = [];
 
-<script>
-    const togBtn = document.getElementById('togBtn');
-    const cameraContainer = document.getElementById('camera-container');
-    const dropArea = document.getElementById('drop-area');
-    const camera = document.getElementById('camera');
-    const canvas = document.getElementById('canvas');
-    const capture = document.getElementById('capture');
-    const fileElem = document.getElementById('fileElem');
-    const modal = document.getElementById('myModal');
-    const closeBtn = document.getElementsByClassName('close')[0];
-    const uploadBtn = document.getElementById('uploadBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const imagePreview = document.getElementById('image-preview');
-    let useFrontCamera = true; // Flag to toggle between cameras
+      saveDataBtn.addEventListener("click", function () {
+        // console.log(postData);
+        // Making the fetch call
+        fetch("/upload/save/", {
+          method: "POST", // Indicating the method of the request
+          headers: {
+            "Content-Type": "application/json", // Indicating the type of content being sent
+            // Include CSRF token header if needed; adjust the token retrieval as per your setup
+            // 'X-CSRFToken': csrftoken,
+          },
+          body: JSON.stringify({
+            image_path: image_path,
+            detected_items: class_list,
+          }),
+        })
+          .then((response) => response.json()) // Parsing the JSON response
+          .then((data) => {
+            console.log("Success:", data.success); // Handling the success response
+          })
+          .catch((error) => {
+            console.error("Error:", error); // Handling errors
+          });
 
-document.getElementById('switchCamera').addEventListener('click', function() {
-    useFrontCamera = !useFrontCamera; // Toggle the camera flag
-    startCamera(); // Restart the camera with the new setting
-});
+        // After saving, close the modal and clear the image preview
+        modal.style.display = "none";
+        imagePreview.src = ""; // Clear the image preview
+      });
+      let useFrontCamera = true; // Flag to toggle between cameras
 
-function getCameraConstraints() {
-    const facingMode = useFrontCamera ? "user" : "environment";
-    return { video: { facingMode } };
-}
-
-function stopCamera() {
-    if (camera.srcObject) {
-        camera.srcObject.getTracks().forEach(track => track.stop());
-    }
-    camera.srcObject = null; // Clear the video source
-    camera.style.display = 'none';
-    capture.style.display = 'none';
-}
-
-    window.onload = function() {
-        if (!togBtn.checked) {
-            dropArea.style.display = 'none'; // Show drop area by default
-            cameraContainer.style.display = 'flex'; // Hide camera container by default
-            cameraContainer.style.justifyContent= 'center';
-            startCamera();
-        }
-    };
-    togBtn.addEventListener('change', function(e) {
-        if (!togBtn.checked) {
-            dropArea.style.display = 'none';
-            cameraContainer.style.display = 'flex'; // Hide camera container by default
-            cameraContainer.style.justifyContent= 'center';
-            startCamera();
+      // Event listener for the checkbox to toggle between modals
+      togBtn.addEventListener("change", function () {
+        if (togBtn.checked) {
+          previewModal.style.display = "none"; // Hide the editable modal when not in "Click & Upload" mode
         } else {
-            cameraContainer.style.display = 'none';
-            dropArea.style.display = 'block';
-            stopCamera();
+          myModal.style.display = "none"; // Hide the preview modal when not in "Click & Upload" mode
         }
-    });
+      });
 
-    function startCamera() {
-    stopCamera(); // Ensure we stop any previous stream
-
-    camera.style.display = 'block';
-    capture.style.display = 'block';
-
-    const constraints = getCameraConstraints(); // Get constraints for the current camera
-
-    navigator.mediaDevices.getUserMedia(constraints)
-        .then(function(stream) {
-            camera.srcObject = stream;
-            camera.play();
-        }).catch(function(error) {
-            console.error("Something went wrong with the camera!", error);
-            // showSnackbar("Something went wrong with the camera!"); // Use a snackbar to show the error
-        });
-}
-    function stopCamera() {
-        camera.style.display = 'none';
-        capture.style.display = 'none';
-        if (camera.srcObject) {
-            camera.srcObject.getTracks().forEach(track => track.stop());
-        }
-    }
-
-    capture.addEventListener('click', function() {
-        const context = canvas.getContext('2d');
+      // And in your capture event listener
+      capture.addEventListener("click", function () {
+        const context = canvas.getContext("2d");
         canvas.width = camera.videoWidth;
         canvas.height = camera.videoHeight;
         context.drawImage(camera, 0, 0, camera.videoWidth, camera.videoHeight);
-        const imageDataUrl = canvas.toDataURL('image/png');
-        displayImage(imageDataUrl);
-    });
+        imageDataUrl = canvas.toDataURL("image/png");
 
-    fileElem.addEventListener('change', function(e) {
-        handleFiles(fileElem.files);
-    });
-
-    function handleFiles(files) {
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                displayImage(e.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function displayImage(src) {
-        imagePreview.src = src;
-        modal.style.display = "block";
-    }
-
-    closeBtn.onclick = function() {
-        modal.style.display = "none";
-    }
-
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-
-    function clearFileInput() {
-    // Clear the file input for re-use
-        fileElem.value = "";
-        if (fileElem.value) {
-            fileElem.type = "text"; // Override the input type to trick the browser into clearing it
-            fileElem.type = "file"; // Restore the original type
-        }
-    }
-
-    cancelBtn.addEventListener('click', function() {
-        modal.style.display = "none";
-        clearFileInput(); // Clear the file input
-        imagePreview.src = ''; // Clear the image preview
-    });
-           // Function to handle file selection
-           function handleFiles(files) {
-            if (files.length === 0) {
-                console.log('No file selected!');
-                return;
-            }
-            const file = files[0]; // Get the first file
-            if (file) {
-                uploadImage(file);
-            }
-        }
-
-        // Function to upload the image file using FormData
-        function uploadImage(file) {
-            const formData = new FormData();
-            formData.append("file", file); // The file to upload
-
-            // Function to get the CSRF token from cookies
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-
-            const csrftoken = getCookie('csrftoken'); // Get CSRF token
-
-            // Perform the fetch call to send the image to the server
-            fetch('/upload/', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    "X-CSRFToken": csrftoken
-                },
-                credentials: 'include'
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error('Network response was not ok.');
-            })
-            .then(data => {
-                console.log('Success:', data);
-                // Further processing if needed
-            })
-            .catch((error) => {
-                console.error('Error:', error);
+        // Make sure handleFiles is defined and not null before calling
+        if (typeof handleFiles === "function") {
+          fetch(imageDataUrl)
+            .then((res) => res.blob())
+            .then((blob) => {
+              const file = new File([blob], "captured_image.png", {
+                type: "image/png",
+              });
+              const fileList = [file]; // Create an array consisting of the file
+              handleFiles(fileList); // Call handleFiles with the fileList
             });
         }
+      });
 
-        // Event listener for the upload button
-        document.getElementById('uploadBtn').addEventListener('click', () => {
-            const fileElem = document.getElementById('fileElem');
-            if (fileElem) {
-                fileElem.click(); // Simulate click on the file input
+      fileElem.addEventListener("change", function (e) {
+        // Ensure there's a file selected
+        if (e.target.files.length > 0) {
+          const file = e.target.files[0];
+          const reader = new FileReader();
+
+          // Once the file is read, set it as the source for the image preview
+          reader.onload = function (e) {
+            // Show the preview modal with the image
+            showPreviewModal(e.target.result);
+          };
+
+          // Read the file as a Data URL
+          reader.readAsDataURL(file);
+        }
+      });
+
+      document.querySelectorAll(".close").forEach(function (element) {
+        element.addEventListener("click", function () {
+          element.closest(".modal").style.display = "none";
+        });
+      });
+
+      // Clicking outside the modal should close it
+      window.addEventListener("click", function (event) {
+        if (event.target.classList.contains("modal")) {
+          event.target.style.display = "none";
+        }
+      });
+
+      // Cancel button event listeners for both modals
+      document.querySelectorAll(".cancelBtn").forEach(function (element) {
+        element.addEventListener("click", function () {
+          element.closest(".modal").style.display = "none";
+          element.closest(".image").src = null; // Clear the image preview
+          imageDataUrl = "";
+        });
+      });
+
+      document
+        .getElementById("switchCamera")
+        .addEventListener("click", function () {
+          useFrontCamera = !useFrontCamera; // Toggle the camera flag
+          startCamera(); // Restart the camera with the new setting
+        });
+
+      function getCameraConstraints() {
+        const facingMode = useFrontCamera ? "user" : "environment";
+        return { video: { facingMode } };
+      }
+
+      function stopCamera() {
+        if (camera.srcObject) {
+          camera.srcObject.getTracks().forEach((track) => track.stop());
+        }
+        camera.srcObject = null; // Clear the video source
+        camera.style.display = "none";
+        capture.style.display = "none";
+      }
+
+      window.onload = function () {
+        if (!togBtn.checked) {
+          dropArea.style.display = "none"; // Show drop area by default
+          cameraContainer.style.display = "flex"; // Hide camera container by default
+          cameraContainer.style.justifyContent = "center";
+          startCamera();
+        }
+      };
+      togBtn.addEventListener("change", function (e) {
+        if (!togBtn.checked) {
+          dropArea.style.display = "none";
+          cameraContainer.style.display = "flex"; // Hide camera container by default
+          cameraContainer.style.justifyContent = "center";
+          startCamera();
+        } else {
+          cameraContainer.style.display = "none";
+          dropArea.style.display = "block";
+          stopCamera();
+        }
+      });
+
+      function startCamera() {
+        stopCamera(); // Ensure we stop any previous stream
+
+        camera.style.display = "block";
+        capture.style.display = "block";
+
+        const constraints = getCameraConstraints(); // Get constraints for the current camera
+
+        navigator.mediaDevices
+          .getUserMedia(constraints)
+          .then(function (stream) {
+            camera.srcObject = stream;
+            camera.play();
+          })
+          .catch(function (error) {
+            console.error("Something went wrong with the camera!", error);
+            // showSnackbar("Something went wrong with the camera!"); // Use a snackbar to show the error
+          });
+      }
+      function stopCamera() {
+        camera.style.display = "none";
+        capture.style.display = "none";
+        if (camera.srcObject) {
+          camera.srcObject.getTracks().forEach((track) => track.stop());
+        }
+      }
+      fileElem.addEventListener("change", function (e) {
+        handleFiles(fileElem.files);
+      });
+
+      function handleFiles(files) {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            // displayImage(e.target.result);
+            imageDataUrl = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      closeBtn.onclick = function () {
+        modal.style.display = "none";
+        imageDataUrl = "";
+      };
+
+      window.onclick = function (event) {
+        if (event.target == modal) {
+          modal.style.display = "none";
+          imageDataUrl = "";
+        }
+      };
+
+      function clearFileInput() {
+        // Clear the file input for re-use
+        fileElem.value = "";
+        if (fileElem.value) {
+          fileElem.type = "text"; // Override the input type to trick the browser into clearing it
+          fileElem.type = "file"; // Restore the original type
+        }
+      }
+
+      // Event listener for the Cancel button
+      cancelBtn.addEventListener("click", function () {
+        // Close the modal and clear the image preview
+        modal.style.display = "none";
+        clearFileInput(); // Clear the file input
+        imageDataUrl = "";
+      });
+      // Function to handle file selection
+      function handleFiles(files) {
+        if (files.length === 0) {
+          console.log("No file selected!");
+          return;
+        }
+        const file = files[0]; // Get the first file
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            imageDataUrl = e.target.result;
+            uploadImage(file); // Upload the file
+          };
+          reader.readAsDataURL(file); // Read the file as a Data URL
+        }
+      }
+
+      // Function to upload the image file using FormData
+      function uploadImage(file) {
+        const formData = new FormData();
+        formData.append("file", file); // The file to upload
+
+        // Function to get the CSRF token from cookies
+        function getCookie(name) {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === name + "=") {
+                cookieValue = decodeURIComponent(
+                  cookie.substring(name.length + 1),
+                );
+                break;
+              }
             }
-});
+          }
+          return cookieValue;
+        }
 
-</script>
+        const csrftoken = getCookie("csrftoken"); // Get CSRF token
 
-</body>
+        // Perform the fetch call to send the image to the server
+        fetch("/upload/", {
+          method: "POST",
+          body: formData,
+          headers: {
+            "X-CSRFToken": csrftoken,
+          },
+          credentials: "include",
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error("Network response was not ok.");
+          })
+          .then((data) => {
+            console.log("Success:", data.detected_items);
+            showModalWithData(data.detected_items, imageDataUrl); // Pass the data URL to the function
+            detectedItems = data.detected_items;
+            detectedItems.forEach((element) => {
+              console.log(element.class);
+              class_list.push(element.class);
+            });
+            image_path = data.save_path;
+            console.log(`save_path: ${data.save_path}`);
+            // Further processing if needed
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+        function showModalWithData(detectedItems, imageDataUrl) {
+          const modalBody = modal.querySelector(".modal-body");
+          modalBody.innerHTML = ""; // Clear existing content
+
+          // Create and append the preview image if imageDataUrl is provided
+          if (imageDataUrl !== "") {
+            const previewImage = document.createElement("img");
+            previewImage.src = imageDataUrl;
+            previewImage.style.maxWidth = "100%"; // Ensure the image fits within the modal
+            previewImage.style.borderRadius = "4px"; // Optional: add some styling
+            previewImage.style.marginBottom = "20px"; // Add spacing between image and the rest of the content
+            modalBody.appendChild(previewImage);
+          } else {
+            const previewImage = document.createElement("img");
+            previewImage.src = "";
+            previewImage.display = "none";
+            previewImage.style.maxWidth = "100%"; // Ensure the image fits within the modal
+            previewImage.style.borderRadius = "4px"; // Optional: add some styling
+            previewImage.style.marginBottom = "20px"; // Add spacing between image and the rest of the content
+            modalBody.appendChild(previewImage);
+          }
+
+          // Create an input field for adding new items
+          const inputContainer = document.createElement("div");
+          inputContainer.innerHTML = `
+        <input type="text" id="newItemInput" placeholder="Add new item" />
+        <button id="addItemBtn">Add</button>
+    `;
+          modalBody.appendChild(inputContainer);
+
+          // Handle adding new items
+          document
+            .getElementById("addItemBtn")
+            .addEventListener("click", function () {
+              const newItem = document
+                .getElementById("newItemInput")
+                .value.trim();
+              if (newItem) {
+                detectedItems.push({ class: newItem, confidence: 1 }); // Assuming a default confidence for new items
+                class_list.push(newItem);
+                updateDetectedItemsList(detectedItems); // Refresh the list
+              }
+            });
+
+          // Create a container for items
+          const itemsContainer = document.createElement("div");
+          itemsContainer.id = "itemsContainer";
+          modalBody.appendChild(itemsContainer);
+
+          // Function to update the list of detected items
+          function updateDetectedItemsList(items) {
+            const container = document.getElementById("itemsContainer");
+            container.innerHTML = ""; // Clear the container
+
+            items.forEach((item, index) => {
+              // Create an element for each detected item
+              const itemElement = document.createElement("div");
+              itemElement.style.marginBottom = "20px"; // Add some spacing
+
+              // Add content with item details and a remove button
+              itemElement.innerHTML = `
+                <div><strong>Item:</strong> ${item.class}</div>
+                <div><strong>Confidence:</strong> ${(
+                  item.confidence * 100
+                ).toFixed(2)}%</div>
+                <button class="removeItemBtn" data-index="${index}">Remove</button>
+            `;
+
+              container.appendChild(itemElement);
+            });
+
+            // Attach click event listeners to remove buttons
+            document.querySelectorAll(".removeItemBtn").forEach((button) => {
+              button.addEventListener("click", function () {
+                const index = parseInt(this.getAttribute("data-index"), 10);
+                detectedItems.splice(index, 1); // Remove the item from the list
+                updateDetectedItemsList(detectedItems); // Refresh the list
+              });
+            });
+          }
+
+          // Initially populate the list with detected items
+          updateDetectedItemsList(detectedItems);
+
+          modal.style.display = "block";
+        }
+
+        fileElem.addEventListener("change", function (e) {
+          handleFiles(e.target.files);
+          showPreviewModal(e.target.files);
+        });
+
+        // Event listener for the Close (X) button
+        closeBtn.addEventListener("click", function () {
+          modal.style.display = "none";
+          imagePreview.src = ""; // Clear the image preview
+        });
+
+        window.onclick = function (event) {
+          if (event.target == modal) {
+            modal.style.display = "none";
+            imagePreview.src = "";
+          }
+        };
+      }
+
+      // Event listener for the upload button
+      document.getElementById("uploadBtn").addEventListener("click", () => {
+        const fileElem = document.getElementById("fileElem");
+        if (fileElem) {
+          fileElem.click(); // Simulate click on the file input
+        }
+      });
+    </script>
+  </body>
 </html>

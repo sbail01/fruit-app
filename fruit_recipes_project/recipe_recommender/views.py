@@ -21,9 +21,10 @@ import os
 from torchvision import transforms
 from roboflow import Roboflow
 import supervision as sv
-import cv2
-import io
+import csv
+from django.http import JsonResponse
 import json
+from django.views.decorators.csrf import csrf_exempt
 
 
 # # Load the Hugging Face model and feature extractor
@@ -145,18 +146,6 @@ def calculate_iou(box1, box2):
 @csrf_exempt
 # Define the preprocess function
 def preprocess_image(image_path, target_size=(100, 100)):  # Verify the target_size used during training
-    # # Load and resize the image
-    # img = load_img(image_path, target_size=target_size)
-    # img_array = img_to_array(img)
-    
-    # # Normalize the image array
-    # img_array /= 255.0  # This matches the rescale parameter used during training
-    
-    # # Add a batch dimension
-    # img_array = np.expand_dims(img_array, axis=0)
-    
-    # return img_array
-    # Preprocess the image here...
     preprocess = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -204,33 +193,59 @@ def generate_sliding_windows(image, window_size, stride):
             window = image[:, :, y:y + window_size, x:x + window_size]
             yield window, x, y  # Return the window and its offset
 
-# @csrf_exempt
-# def upload_image(request):
-#     if request.method == 'POST':
-#         if 'file' not in request.FILES:
-#             return JsonResponse({'error': 'No file part'}, status=400)
+@csrf_exempt
+def save_csv(request):
+    if request.method == "POST":
+        try:
+            # Parsing JSON data from request body
+            data = json.loads(request.body.decode('utf-8'))
+            image_path = data.get('image_path', '')  # Default to empty string if not found
+            detected_items = data.get('detected_items', [])  # Default to empty list if not found
 
-#         # Load the image file from the request
-#         file = request.FILES['file']
-#         image = Image.open(file).convert('RGB')  # Ensure image is in RGB format
-        
-#         # Preprocess the image using the feature extractor
-#         inputs = feature_extractor(images=image, return_tensors="pt")
+            # Debug print statements (consider removing in production)
+            print("image_path:",image_path)
+            print("detected_items:",detected_items)
 
-#         # Get model predictions
-#         with torch.no_grad():
-#             predictions = model(**inputs)
+            # CSV file path, adjust the path as necessary
+            csv_file_path = 'detected_items.csv'
 
-#         # Post-process the predictions to get human-readable labels
-#         recognized_ingredients = postprocess_predictions(predictions.logits)
+            # Check if the CSV file exists to decide on writing the header
+            write_header = not os.path.exists(csv_file_path)
+            csv_file_path = 'detected_items.csv'
+            write_header = not os.path.exists(csv_file_path)
 
-#         # Return the predictions as JSON
-#         return JsonResponse({'ingredients': recognized_ingredients})
+            # Read the existing CSV and check the number of entries
+            with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
+                reader = csv.reader(file)
+                rows = list(reader)
+                if len(rows) > 300:  # Assuming the first row is the header
+                    # Delete the image corresponding to the topmost entry
+                    if os.path.exists(rows[1][0]):
+                        os.remove(rows[1][0])  # rows[1][0] is the image path of the first data row
+                    rows.pop(1)  # Remove the topmost data entry
 
-#     else:
-#         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
-    
-#     result = model.predict("your_image.jpg", confidence=40, overlap=30).json()
+            # Write the updated data back to the CSV
+            with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+                writer.writerows(rows)
+            with open(csv_file_path, mode='a', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+
+                # If the file is newly created, write the header
+                if write_header:
+                    header = ['Image Path'] + [f'Item {i+1}' for i in range(len(detected_items))]
+                    writer.writerow(header)
+
+                # Writing data row
+                row = [image_path] + detected_items
+                writer.writerow(row)
+
+            return JsonResponse({"success": True, "message": "Data successfully added to CSV."})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)}, status=400)
+    else:
+        return JsonResponse({"success": False, "message": "Invalid request method."}, status=405) 
+
 @csrf_exempt
 def upload_image(request):
     if request.method == 'POST':
@@ -277,42 +292,17 @@ def upload_image(request):
                 "height": prediction["height"]
             }
         } for prediction in predictions]
-        # Try to delete the saved image, catch and log any errors
-        try:
-            os.remove(save_path)
-        except Exception as e:
-            print(f"Error deleting the image {save_path}: {e}")
+        # # Try to delete the saved image, catch and log any errors
+        # try:
+        #     os.remove(save_path)
+        # except Exception as e:
+        #     print(f"Error deleting the image {save_path}: {e}")
 
         # Return the predictions as JSON
-        return JsonResponse({'detected_items': detected_items})
+        return JsonResponse({'detected_items': detected_items,'save_path':save_path})
 
     else:
         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
-
-# @csrf_exempt
-# def upload_image(request):
-#     if request.method == 'POST' and 'file' in request.FILES:
-#         file = request.FILES['file']
-#         saved_file_path = save_uploaded_file(file)  # Ensure this function is defined correctly
-        
-#         # Proceed with preprocessing and predicting using saved_file_path
-#         processed_image = preprocess_image(saved_file_path)  # Ensure preprocess_image is implemented correctly
-#         predictions = fruit_model.predict(processed_image)
-
-#         # Process predictions
-#         predicted_probs = predictions[0].tolist()  # use to list, for JSON serializable
-        
-#         top_k = 5
-#         top_indices = np.argsort(predicted_probs)[-top_k:][::-1]
-#         top_class_names = [settings.CLASS_NAMES[i] for i in top_indices]
-#         top_probabilities = [predicted_probs[i] for i in top_indices]
-#         # results into a list of dictionaries
-#         predictions_above_threshold = [
-#             {'class_name': class_name, 'probability': float(probability)}
-#             for class_name, probability in zip(top_class_names, top_probabilities)
-#         ]
-
-#         return JsonResponse({'predictions': predictions_above_threshold})
 
 
 
