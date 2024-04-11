@@ -6,17 +6,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}My Recipes{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #fff;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      header {
+        background-color: #333;
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 2rem;
+        align-items: center;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+
+      nav ul {
+        padding: 0;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        margin: 0;
+      }
+
+      nav ul li {
+        margin-left: 20px;
+      }
+
+      nav ul li a {
+        text-decoration: none;
+        color: #fff;
+        font-weight: bold;
+        transition: color 0.3s ease;
+      }
+
+      nav ul li a:hover,
+      nav ul li a:focus {
+        color: #aaa;
+      }
+
+      main {
+        padding: 2rem;
+        flex-grow: 1;
+      }
+
+      footer {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 1rem 0;
+        margin-top: auto;
+      }
+
+      footer p {
+        margin: 0;
+        font-size: 0.8rem;
+      }
+
+      @media (max-width: 600px) {
+        header {
+          flex-direction: column;
+        }
+        nav ul {
+          flex-direction: column;
+          margin-top: 1rem;
+        }
+        nav ul li {
+          margin: 10px 0;
+        }
+      }
+    </style>
   </head>
   <body>
     <header>
-      <!-- Header content goes here -->
       <h1>My Recipes</h1>
       <nav>
         <ul>
           <li><a href="/">Home</a></li>
           <li><a href="/recipes/">Recipes</a></li>
-          <li><a href="/pic-uploading-page/">Detect</a></li>
-          <!-- Add more navigation links as needed -->
+          <li><a href="/pic-uploading-page/">Custom Recipe</a></li>
         </ul>
       </nav>
     </header>
@@ -24,7 +103,6 @@
     <main>{% block content %} {% endblock %}</main>
 
     <footer>
-      <!-- Footer content goes here -->
       <p>&copy; 2024 My Recipes. All rights reserved.</p>
     </footer>
   </body>

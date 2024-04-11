@@ -18,6 +18,20 @@
         min-height: 100vh;
         overflow: hidden;
       }
+      .button {
+        background-color: #2196f3; /* Blue background */
+        color: white; /* White text */
+        padding: 10px 20px; /* Top and Bottom, Left and Right padding */
+        border: none; /* No border */
+        border-radius: 5px; /* Rounded corners */
+        cursor: pointer; /* Pointer cursor on hover */
+        transition: background-color 0.3s ease; /* Smooth background color transition */
+      }
+
+      .button:hover {
+        background-color: #0b7dda; /* Slightly darker blue on hover */
+      }
+
       .capture {
         /* Center the capture button with padding */
         display: flex;
@@ -144,8 +158,9 @@
         width: 70%;
         max-height: 600px;
         max-width: 600px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+        border-radius: 10px; /* Rounded corners */
       }
-
       .modal-header {
         display: flex;
         justify-content: space-between;
@@ -156,13 +171,24 @@
         margin: 0;
       }
 
+      .modal-header,
       .modal-footer {
+        padding: 10px 0; /* Padding for header and footer */
         display: flex;
-        justify-content: flex-end;
+      }
+
+      .modal-header {
+        border-bottom: 1px solid #eee; /* Light border for the header */
+      }
+
+      .modal-footer {
+        border-top: 1px solid #eee; /* Light border for the footer */
+        justify-content: flex-end; /* Center the buttons */
       }
 
       .modal-footer button {
         margin-left: 10px;
+        justify-content: flex-end;
       }
 
       .close {
@@ -188,6 +214,103 @@
         margin: auto; /* centers image in the available space */
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: adds a shadow for some depth */
       }
+      /* .icon-button {
+        background-color: #000;
+        border: 2px solid #fff;
+        color: #fff;
+        padding: 10px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.1s;
+      } */
+      .icon-button {
+        background-color: #000; /* Black background */
+        color: #fff; /* White text */
+        border: none; /* No border */
+        padding: 10px 15px; /* Adjust padding as needed */
+        border-radius: 20px; /* Rounded corners */
+        cursor: pointer; /* Pointer cursor on hover */
+        font-size: 16px; /* Text size */
+        display: inline-flex; /* Enables flexbox */
+        align-items: center; /* Centers items vertically */
+        justify-content: center; /* Centers items horizontally */
+        width: auto; /* Adjust width as needed or remove for auto width */
+        height: 40px; /* Adjust height as needed */
+        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Optional shadow for depth */
+        margin: 0 5px; /* Margin for spacing around buttons */
+        transition: all 0.3s ease; /* Smooth transition for interactive states */
+      }
+
+      /* Adjust the size on hover for a visual effect, if desired */
+      .icon-button:hover {
+        background-color: #333; /* Darker background on hover */
+        transform: scale(1.05); /* Optional: Scale up on hover */
+      }
+
+      /* .icon-button:hover {
+        background-color: #f0f0f0;
+      } */
+
+      .icon-button img {
+        width: 20px; /* Icon width */
+        height: auto; /* Adjust height automatically */
+        margin-right: 8px; /* Space between icon and text */
+      }
+
+      .modern-input-container {
+        position: relative;
+        font-family: Arial, sans-serif;
+        margin-bottom: 20px;
+      }
+
+      .modern-input-container input[type="text"] {
+        width: 100%;
+        padding: 10px 15px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 16px;
+        background-color: white;
+        background-image: url("icon.png"); /* Replace with your icon's path */
+        background-position: 10px 10px;
+        background-repeat: no-repeat;
+        padding-left: 40px; /* Adjust based on your icon size */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease, border-color 0.3s ease;
+      }
+
+      .modern-input-container input[type="text"]:focus {
+        outline: none;
+        border-color: #4a90e2;
+        box-shadow: 0 0 8px rgba(74, 144, 226, 0.5);
+      }
+
+      /* Optionally: Style for the icon if you want it to be clickable */
+      .modern-input-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        width: 30px;
+        transform: translateY(-50%);
+        color: #fff; /* Black text color */
+        background-color: #000; /* White background */
+        cursor: pointer;
+        border-radius: 18px; /* Rounded corners */
+        cursor: pointer; /* Hand cursor on hover */
+        font-size: 28px; /* Icon size (adjust as needed) */
+        margin: 0px; /* Spacing between buttons */
+        display: inline-flex; /* Aligns icon and text inline */
+        align-items: center; /* Centers items vertically */
+        justify-content: space-around; /* Centers items horizontally */
+        transition: background-color 0.1s; /* Smooth transition for hover effect */
+      }
     </style>
   </head>
   <body>
@@ -202,8 +325,22 @@
 
     <div id="camera-container">
       <video id="camera" autoplay></video>
-      <button id="capture">Capture Photo</button>
-      <button id="switchCamera">Switch Camera</button>
+      <div
+        style="
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
+        "
+      >
+        <!-- Use the same class for both buttons -->
+        <button class="icon-button" id="capture" title="Capture">
+          Capture
+        </button>
+        <button class="icon-button" id="switchCamera" title="Switch Camera">
+          Switch
+        </button>
+      </div>
       <canvas id="canvas"></canvas>
     </div>
 
@@ -211,7 +348,23 @@
       <p>Drag and Drop file here or click to browse</p>
       <input type="file" id="fileElem" multiple accept="image/*" />
     </div>
-
+    <!-- The Modal for Recipe Display -->
+    <div id="recipeModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Recipe Details</h2>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <h3 id="recipeName"></h3>
+          <p><strong>Duration:</strong> <span id="recipeDuration"></span></p>
+          <p><strong>Steps:</strong> <span id="recipeSteps"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button class="icon-button" id="closeRecipeModal">Close</button>
+        </div>
+      </div>
+    </div>
     <!-- The Modal for Preview and Data Edit -->
     <div id="myModal" class="modal">
       <div class="modal-content">
@@ -224,8 +377,12 @@
           <!-- Editable Data List Will Be Populated Here -->
         </div>
         <div class="modal-footer">
-          <button type="button" id="saveDataBtn">Save</button>
-          <button type="button" id="cancelBtn">Cancel</button>
+          <button type="button" id="saveDataBtn" class="icon-button">
+            Save
+          </button>
+          <button type="button" id="cancelBtn" class="icon-button">
+            Cancel
+          </button>
         </div>
       </div>
     </div>
@@ -246,16 +403,17 @@
       const imageInput = document.getElementById("imageInput");
       const imagePreview = document.getElementById("image-preview");
       const previewModal = document.getElementById("previewModal"); // The non-editable modal
+      let recipe = { recipe_name: "", recipe_duration: null, recipe_steps: "" };
       let imageDataUrl; // Global variable to store the data URL of the image
       let imageSrc;
       let image_path;
       let detected_items;
       let class_list = [];
-
+      // Toggle between camera and image
       saveDataBtn.addEventListener("click", function () {
         // console.log(postData);
         // Making the fetch call
-        fetch("/upload/save/", {
+        fetch("/save/", {
           method: "POST", // Indicating the method of the request
           headers: {
             "Content-Type": "application/json", // Indicating the type of content being sent
@@ -269,12 +427,26 @@
         })
           .then((response) => response.json()) // Parsing the JSON response
           .then((data) => {
-            console.log("Success:", data.success); // Handling the success response
-          })
-          .catch((error) => {
-            console.error("Error:", error); // Handling errors
-          });
+            if (data.success) {
+              console.log("Success:", data.success);
+              recipe.recipe_name = data.recipe_name;
+              recipe.recipe_duration = data.recipe_duration;
+              recipe.recipe_steps = data.recipe_steps;
+              // Assign data to the recipe object (not necessary if you're directly updating the modal's content)
+              document.getElementById("recipeName").textContent =
+                data.recipe_name;
+              document.getElementById("recipeDuration").textContent =
+                data.recipe_duration;
+              document.getElementById("recipeSteps").textContent =
+                data.recipe_steps;
 
+              // Show the modal
+              document.getElementById("recipeModal").style.display = "block";
+            } else {
+              // Handle unsuccessful response
+              console.error("Data fetch unsuccessful");
+            }
+          });
         // After saving, close the modal and clear the image preview
         modal.style.display = "none";
         imagePreview.src = ""; // Clear the image preview
@@ -425,13 +597,13 @@
 
       function handleFiles(files) {
         for (let i = 0; i < files.length; i++) {
-          const file = files[i];
+          // const file = files[i];
           const reader = new FileReader();
           reader.onload = function (e) {
             // displayImage(e.target.result);
             imageDataUrl = e.target.result;
           };
-          reader.readAsDataURL(file);
+          // reader.readAsDataURL(file);
         }
       }
 
@@ -474,8 +646,8 @@
           const reader = new FileReader();
           reader.onload = function (e) {
             imageDataUrl = e.target.result;
-            uploadImage(file); // Upload the file
           };
+          uploadImage(file); // Upload the file
           reader.readAsDataURL(file); // Read the file as a Data URL
         }
       }
@@ -525,7 +697,6 @@
             showModalWithData(data.detected_items, imageDataUrl); // Pass the data URL to the function
             detectedItems = data.detected_items;
             detectedItems.forEach((element) => {
-              console.log(element.class);
               class_list.push(element.class);
             });
             image_path = data.save_path;
@@ -560,9 +731,13 @@
           // Create an input field for adding new items
           const inputContainer = document.createElement("div");
           inputContainer.innerHTML = `
-        <input type="text" id="newItemInput" placeholder="Add new item" />
-        <button id="addItemBtn">Add</button>
-    `;
+                <div class="modern-input-container">
+                <input type="text" id="newItemInput" placeholder="Add new item" />
+                <!-- Optionally include an icon inside the input field -->
+                <span id="addItemBtn" class="modern-input-icon">+</span>
+              </div>
+                <!--<button id="addItemBtn" class="icon-button">+</button> -->
+            `;
           modalBody.appendChild(inputContainer);
 
           // Handle adding new items
@@ -594,15 +769,24 @@
               const itemElement = document.createElement("div");
               itemElement.style.marginBottom = "20px"; // Add some spacing
 
-              // Add content with item details and a remove button
-              itemElement.innerHTML = `
-                <div><strong>Item:</strong> ${item.class}</div>
-                <div><strong>Confidence:</strong> ${(
-                  item.confidence * 100
-                ).toFixed(2)}%</div>
-                <button class="removeItemBtn" data-index="${index}">Remove</button>
-            `;
-
+              // // Add content with item details and a remove button
+              // itemElement.innerHTML = `
+              //     <div><strong>Item:</strong> ${item.class}</div>
+              //     <div><strong>Confidence:</strong> ${(
+              //       item.confidence * 100
+              //     ).toFixed(2)}%</div>
+              //     <button class="removeItemBtn icon-button" data-index="${index}">−</button>
+              // `;
+              itemElement.innerHTML = `<div class="item-container" style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="flex-grow: 1;">
+          <div><strong>Item:</strong> ${item.class}</div>
+          <div><strong>Confidence:</strong> ${(item.confidence * 100).toFixed(
+            2,
+          )}%</div>
+        </div>
+        <button class="removeItemBtn icon-button" data-index="${index}" style="margin-left: 10px;">−</button>
+      </div>
+`;
               container.appendChild(itemElement);
             });
 
