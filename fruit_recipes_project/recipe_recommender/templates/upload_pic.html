@@ -694,13 +694,13 @@
           // Create an input field for adding new items
           const inputContainer = document.createElement("div");
           inputContainer.innerHTML = `
-          <div class="modern-input-container">
-          <input type="text" id="newItemInput" placeholder="Add new item" />
-          <!-- Optionally include an icon inside the input field -->
-          <span id="addItemBtn" class="modern-input-icon">+</span>
-        </div>
-          <!--<button id="addItemBtn" class="icon-button">+</button> -->
-      `;
+                <div class="modern-input-container">
+                <input type="text" id="newItemInput" placeholder="Add new item" />
+                <!-- Optionally include an icon inside the input field -->
+                <span id="addItemBtn" class="modern-input-icon">+</span>
+              </div>
+                <!--<button id="addItemBtn" class="icon-button">+</button> -->
+            `;
           modalBody.appendChild(inputContainer);
 
           // Handle adding new items
@@ -732,15 +732,24 @@
               const itemElement = document.createElement("div");
               itemElement.style.marginBottom = "20px"; // Add some spacing
 
-              // Add content with item details and a remove button
-              itemElement.innerHTML = `
-                  <div><strong>Item:</strong> ${item.class}</div>
-                  <div><strong>Confidence:</strong> ${(
-                    item.confidence * 100
-                  ).toFixed(2)}%</div>
-                  <button class="removeItemBtn icon-button" data-index="${index}">−</button>
-              `;
-
+              // // Add content with item details and a remove button
+              // itemElement.innerHTML = `
+              //     <div><strong>Item:</strong> ${item.class}</div>
+              //     <div><strong>Confidence:</strong> ${(
+              //       item.confidence * 100
+              //     ).toFixed(2)}%</div>
+              //     <button class="removeItemBtn icon-button" data-index="${index}">−</button>
+              // `;
+              itemElement.innerHTML = `<div class="item-container" style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="flex-grow: 1;">
+          <div><strong>Item:</strong> ${item.class}</div>
+          <div><strong>Confidence:</strong> ${(item.confidence * 100).toFixed(
+            2,
+          )}%</div>
+        </div>
+        <button class="removeItemBtn icon-button" data-index="${index}" style="margin-left: 10px; font-size:10px">−</button>
+      </div>
+`;
               container.appendChild(itemElement);
             });
 
