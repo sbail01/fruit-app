@@ -25,7 +25,8 @@ import csv
 from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
-
+from django.utils import timezone
+import openai
 
 # # Load the Hugging Face model and feature extractor
 # model_name = "PedroSampaio/fruits-360-16-7"
@@ -36,6 +37,7 @@ from django.views.decorators.csrf import csrf_exempt
 rf = Roboflow(api_key="iqS3KNWPgcu9iiGVHlLw")
 project = rf.workspace().project("fruits-and-vegetables-2vf7u")
 model = project.version(1).model
+openai.api_key = "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"
 
 # MODEL_PATH = os.path.join(settings.BASE_DIR, 'fruit_cnn_model.h5')
 # fruit_model = load_model('C:/Users/Sabrina/Desktop/fruit-app/fruit_recipes_project/fruit_cnn_model.h5')
@@ -192,59 +194,78 @@ def generate_sliding_windows(image, window_size, stride):
         for x in range(0, W - window_size + 1, stride):
             window = image[:, :, y:y + window_size, x:x + window_size]
             yield window, x, y  # Return the window and its offset
+def parse_recipes(response):
+    recipes = []
+    recipe_texts = response.split("Name:")
+    for recipe_text in recipe_texts[1:]:
+        recipe_lines = recipe_text.split("\n")
+        name = recipe_lines[0].strip()
+        duration = int(recipe_lines[1].split()[1])
+        steps = "\n".join(recipe_lines[3:]).strip()
+        recipes.append({"Name": name, "Duration": duration, "Steps": steps})
+    return recipes
+
+# Function to generate recipes
+def generate_recipes(ingredients):
+    prompt = f"Ingredients: {', '.join(ingredients)}. Please generate three possible recipes. Only need recipe name (as Name:), duration (as Duration:) and steps (as Steps:). Do not need ingredients list again."
+
+    response = openai.Completion.create(
+        engine="gpt-3.5-turbo-instruct",
+        prompt=prompt,
+        max_tokens=1500
+    )
+
+    return parse_recipes(response.choices[0].text.strip())
 
 @csrf_exempt
 def save_csv(request):
-    if request.method == "POST":
-        try:
-            # Parsing JSON data from request body
-            data = json.loads(request.body.decode('utf-8'))
-            image_path = data.get('image_path', '')  # Default to empty string if not found
-            detected_items = data.get('detected_items', [])  # Default to empty list if not found
-
-            # Debug print statements (consider removing in production)
-            print("image_path:",image_path)
-            print("detected_items:",detected_items)
-
-            # CSV file path, adjust the path as necessary
-            csv_file_path = 'detected_items.csv'
-
-            # Check if the CSV file exists to decide on writing the header
-            write_header = not os.path.exists(csv_file_path)
-            csv_file_path = 'detected_items.csv'
-            write_header = not os.path.exists(csv_file_path)
-
-            # Read the existing CSV and check the number of entries
+    if request.method != "POST":
+        return JsonResponse({"success": False, "message": "This endpoint only accepts POST requests."}, status=405)
+    
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        image_path = data.get('image_path', '')
+        detected_items = data.get('detected_items', [])
+        recipes = generate_recipes(detected_items)
+        print(recipes[0]["Name"])  # Access the name of the first recipe
+        print(recipes[1]["Duration"])  # Access the duration of the second recipe
+        print(recipes[2]["Steps"])  # Access the steps of the third recipe
+        # Check and prepare the CSV file path
+        csv_file_path = os.path.join(settings.BASE_DIR, 'detected_items.csv')
+        write_header = not os.path.exists(csv_file_path)
+        
+        # Prepare to manage the oldest entry
+        rows = []
+        if os.path.exists(csv_file_path):
             with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
-                reader = csv.reader(file)
-                rows = list(reader)
-                if len(rows) > 300:  # Assuming the first row is the header
-                    # Delete the image corresponding to the topmost entry
-                    if os.path.exists(rows[1][0]):
-                        os.remove(rows[1][0])  # rows[1][0] is the image path of the first data row
-                    rows.pop(1)  # Remove the topmost data entry
+                rows = list(csv.reader(file))
+            
+            if len(rows) > 2:  # Modify this number based on your specific needs
+                oldest_image_path = os.path.join(settings.BASE_DIR, rows[1][0])
+                try:
+                    os.remove(oldest_image_path)
+                    print(f"Deleted oldest image: {oldest_image_path}")
+                except Exception as e:
+                    print(f"Error deleting the image {oldest_image_path}: {e}")
+                rows.pop(1)  # Remove the oldest entry
+                
+            # Rewrite the CSV without the oldest entry
+            with open(csv_file_path, 'w', newline='', encoding='utf-8') as file:
+                csv.writer(file).writerows(rows)
 
-            # Write the updated data back to the CSV
-            with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
-                writer = csv.writer(file)
-                writer.writerows(rows)
-            with open(csv_file_path, mode='a', newline='', encoding='utf-8') as file:
-                writer = csv.writer(file)
-
-                # If the file is newly created, write the header
-                if write_header:
-                    header = ['Image Path'] + [f'Item {i+1}' for i in range(len(detected_items))]
-                    writer.writerow(header)
-
-                # Writing data row
-                row = [image_path] + detected_items
-                writer.writerow(row)
-
-            return JsonResponse({"success": True, "message": "Data successfully added to CSV."})
-        except Exception as e:
-            return JsonResponse({"success": False, "message": str(e)}, status=400)
-    else:
-        return JsonResponse({"success": False, "message": "Invalid request method."}, status=405) 
+        # Append new data to the CSV
+        with open(csv_file_path, 'a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            if write_header:
+                header = ['Image Path'] + ['Item {}'.format(i + 1) for i in range(len(detected_items))]
+                writer.writerow(header)
+            row = [image_path] + detected_items
+            writer.writerow(row)
+        
+        return JsonResponse({"success": True, "message": "Data successfully added to CSV."})
+    except Exception as e:
+        print(f"Error processing the request: {e}")
+        return JsonResponse({"success": False, "message": "Error processing the request."}, status=400)
 
 @csrf_exempt
 def upload_image(request):
@@ -261,18 +282,22 @@ def upload_image(request):
         if not os.path.exists(uploads_dir):
             os.makedirs(uploads_dir)
 
-        # Define the full path for saving the image
-        save_path = os.path.join(uploads_dir, file.name)
-        if os.path.exists(save_path):
-            base, extension = os.path.splitext(file.name)
-            counter = 1
-            while os.path.exists(os.path.join(uploads_dir, f"{base}_{counter}{extension}")):
-                counter += 1
-            new_filename = f"{base}_{counter}{extension}"
-            save_path = os.path.join(uploads_dir, new_filename)
-
-        # Save the image
-        image.save(save_path)
+        # # Define the full path for saving the image
+        # save_path = os.path.join(uploads_dir, file.name)
+        # if os.path.exists(save_path):
+        #     base, extension = os.path.splitext(file.name)
+        #     counter = 1
+        #     while os.path.exists(os.path.join(uploads_dir, f"{base}_{counter}{extension}")):
+        #         counter += 1
+        #     new_filename = f"{base}_{counter}{extension}"
+        #     save_path = os.path.join(uploads_dir, new_filename)
+                # Append a timestamp to the file name
+        base, extension = os.path.splitext(file.name)
+        timestamp = timezone.now().strftime('%Y%m%d%H%M%S')  
+        new_filename = f"{base}_{timestamp}{extension}"
+        save_path = os.path.join(uploads_dir, new_filename)
+        if not os.path.exists(save_path):
+            image.save(save_path)
 
         # Predict using the saved image
         result = model.predict(save_path, confidence=30, overlap=40)
@@ -307,41 +332,41 @@ def upload_image(request):
 
 
 
-def save_uploaded_file(uploaded_file):
-    """
-    Saves an uploaded file to the 'uploads' directory and returns the path.
+# def save_uploaded_file(uploaded_file):
+#     """
+#     Saves an uploaded file to the 'uploads' directory and returns the path.
 
-    Args:
-        uploaded_file (InMemoryUploadedFile): The file uploaded by the user.
+#     Args:
+#         uploaded_file (InMemoryUploadedFile): The file uploaded by the user.
 
-    Returns:
-        str: The file system path to the saved file.
-    """
+#     Returns:
+#         str: The file system path to the saved file.
+#     """
 
-    # Define the uploads directory path
-    uploads_dir = os.path.join(settings.BASE_DIR, 'uploads')
-    # Ensure the uploads directory exists
-    if not os.path.exists(uploads_dir):
-        os.makedirs(uploads_dir)
+#     # Define the uploads directory path
+#     uploads_dir = os.path.join(settings.BASE_DIR, 'uploads')
+#     # Ensure the uploads directory exists
+#     if not os.path.exists(uploads_dir):
+#         os.makedirs(uploads_dir)
 
-    # Construct the full path for the new file
-    save_path = os.path.join(uploads_dir, uploaded_file.name)
+#     # Construct the full path for the new file
+#     save_path = os.path.join(uploads_dir, uploaded_file.name)
     
-    # Handle potential filename conflicts
-    if os.path.exists(save_path):
-        base, extension = os.path.splitext(uploaded_file.name)
-        counter = 1
-        while os.path.exists(save_path):
-            new_filename = f"{base}_{counter}{extension}"
-            save_path = os.path.join(uploads_dir, new_filename)
-            counter += 1
+#     # Handle potential filename conflicts
+#     if os.path.exists(save_path):
+#         base, extension = os.path.splitext(uploaded_file.name)
+#         counter = 1
+#         while os.path.exists(save_path):
+#             new_filename = f"{base}_{counter}{extension}"
+#             save_path = os.path.join(uploads_dir, new_filename)
+#             counter += 1
 
-    # Save the file
-    with open(save_path, 'wb+') as destination:
-        for chunk in uploaded_file.chunks():
-            destination.write(chunk)
+#     # Save the file
+#     with open(save_path, 'wb+') as destination:
+#         for chunk in uploaded_file.chunks():
+#             destination.write(chunk)
 
-    return save_path
+#     return save_path
 
 
 @login_required
