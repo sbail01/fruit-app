@@ -262,7 +262,7 @@ def save_csv(request):
             row = [image_path] + detected_items
             writer.writerow(row)
         
-        return JsonResponse({"success": True, "message": "Data successfully added to CSV."})
+        return JsonResponse({"success": True, "recipe_name":recipes[0]["Name"],"recipe_duration":recipes[1]["Duration"],"recipe_steps":recipes[2]["Steps"],"message": "Data successfully added to CSV."})
     except Exception as e:
         print(f"Error processing the request: {e}")
         return JsonResponse({"success": False, "message": "Error processing the request."}, status=400)
