@@ -22,13 +22,19 @@
         background-color: #333;
         color: #fff;
         display: flex;
-        justify-content: space-between;
+        justify-content: space-between; /* Aligns children with space between them */
         padding: 1rem 2rem;
         align-items: center;
       }
 
+      header #logo {
+        height: auto; /* Control the size via CSS for better responsiveness */
+        width: 5%; /* Adjust the width as necessary */
+        margin-right: 1rem; /* Adds a little space between the image and the h1 */
+      }
+
       header h1 {
-        margin: 0;
+        margin: 0; /* Removes default margin */
         font-size: 1.5rem;
       }
 
@@ -38,12 +44,13 @@
         display: flex;
         align-items: center;
         margin: 0;
+        width: auto;
       }
 
       nav ul li {
         margin-left: 20px;
+        width: max-content; /* Adjust space between nav items as needed */
       }
-
       nav ul li a {
         text-decoration: none;
         color: #fff;
@@ -90,7 +97,14 @@
   </head>
   <body>
     <header>
-      <h1>My Recipes</h1>
+      <div style="flex-direction: row; display: flex">
+        <img
+          src="../static/assets/dishcovery.png"
+          alt="DishCovery logo"
+          id="logo"
+        />
+        <h1 style="display: flex; padding: 3px">DishCovery</h1>
+      </div>
       <nav>
         <ul>
           <li><a href="/">Home</a></li>
