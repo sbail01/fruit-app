@@ -282,16 +282,6 @@ def upload_image(request):
         if not os.path.exists(uploads_dir):
             os.makedirs(uploads_dir)
 
-        # # Define the full path for saving the image
-        # save_path = os.path.join(uploads_dir, file.name)
-        # if os.path.exists(save_path):
-        #     base, extension = os.path.splitext(file.name)
-        #     counter = 1
-        #     while os.path.exists(os.path.join(uploads_dir, f"{base}_{counter}{extension}")):
-        #         counter += 1
-        #     new_filename = f"{base}_{counter}{extension}"
-        #     save_path = os.path.join(uploads_dir, new_filename)
-                # Append a timestamp to the file name
         base, extension = os.path.splitext(file.name)
         timestamp = timezone.now().strftime('%Y%m%d%H%M%S')  
         new_filename = f"{base}_{timestamp}{extension}"
@@ -328,45 +318,6 @@ def upload_image(request):
 
     else:
         return JsonResponse({'error': 'This endpoint only supports POST requests.'}, status=405)
-
-
-
-
-# def save_uploaded_file(uploaded_file):
-#     """
-#     Saves an uploaded file to the 'uploads' directory and returns the path.
-
-#     Args:
-#         uploaded_file (InMemoryUploadedFile): The file uploaded by the user.
-
-#     Returns:
-#         str: The file system path to the saved file.
-#     """
-
-#     # Define the uploads directory path
-#     uploads_dir = os.path.join(settings.BASE_DIR, 'uploads')
-#     # Ensure the uploads directory exists
-#     if not os.path.exists(uploads_dir):
-#         os.makedirs(uploads_dir)
-
-#     # Construct the full path for the new file
-#     save_path = os.path.join(uploads_dir, uploaded_file.name)
-    
-#     # Handle potential filename conflicts
-#     if os.path.exists(save_path):
-#         base, extension = os.path.splitext(uploaded_file.name)
-#         counter = 1
-#         while os.path.exists(save_path):
-#             new_filename = f"{base}_{counter}{extension}"
-#             save_path = os.path.join(uploads_dir, new_filename)
-#             counter += 1
-
-#     # Save the file
-#     with open(save_path, 'wb+') as destination:
-#         for chunk in uploaded_file.chunks():
-#             destination.write(chunk)
-
-#     return save_path
 
 
 @login_required
