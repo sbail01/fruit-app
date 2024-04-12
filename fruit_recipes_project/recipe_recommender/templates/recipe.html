@@ -1,23 +1,116 @@
 {% extends "base.html" %} {% load static %} {% block content %}
+<style>
+  .featured-recipes {
+    text-align: center;
+    padding: 20px;
+  }
+
+  .recipe-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .recipe-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .recipe-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .recipe-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .recipe-card h3 {
+    color: #333;
+    padding: 16px;
+    margin: 0;
+  }
+
+  .recipe-card p {
+    padding: 0 16px 16px;
+    margin: 0;
+    color: #666;
+  }
+
+  .recipe-card a {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 0 0 8px 8px;
+  }
+</style>
 <section class="featured-recipes">
   <h2>Featured Recipes</h2>
-  <!-- Render featured recipes dynamically -->
-  <div class="recipe-card">
-    <img src="{% static 'images/recipe1.jpg' %}" alt="Recipe 1" />
-    <h3>Recipe Title</h3>
-    <p>Description of the recipe.</p>
-    <a href="#">Read More</a>
+  <div class="recipe-cards-container">
+    <!-- Recipe Card 1 -->
+    <div class="recipe-card">
+      <img
+        src="{% static 'assets/spaghetti.png' %}"
+        alt="Classic Spaghetti Carbonara"
+      />
+      <h3>Classic Spaghetti Carbonara</h3>
+      <p>
+        A traditional Italian pasta dish with creamy egg sauce, pancetta, and
+        Parmesan cheese.
+      </p>
+      <a href="#">Read More</a>
+    </div>
+    <!-- Recipe Card 2 -->
+    <div class="recipe-card">
+      <img src="{% static 'assets/taco.png' %}" alt="Authentic Chicken Tacos" />
+      <h3>Authentic Chicken Tacos</h3>
+      <p>
+        Soft tortillas filled with spicy chicken, salsa, avocado, and fresh
+        cilantro.
+      </p>
+      <a href="#">Read More</a>
+    </div>
+    <!-- Recipe Card 3 -->
+    <div class="recipe-card">
+      <img src="{% static 'assets/sushi.png' %}" alt="Sushi Delight" />
+      <h3>Sushi Delight</h3>
+      <p>
+        An assortment of fresh nigiri and sushi rolls with pickled ginger and
+        wasabi.
+      </p>
+      <a href="#">Read More</a>
+    </div>
+    <!-- Recipe Card 4 -->
+    <div class="recipe-card">
+      <img src="{% static 'assets/butterchicken.png' %}" alt="Butter Chicken" />
+      <h3>Butter Chicken</h3>
+      <p>
+        Rich and creamy tomato curry with tender pieces of marinated chicken,
+        served with basmati rice.
+      </p>
+      <a href="#">Read More</a>
+    </div>
+    <!-- Recipe Card 5 -->
+    <div class="recipe-card">
+      <img
+        src="{% static 'assets/bowl.png' %}"
+        alt="Vibrant Vegan Buddha Bowl"
+      />
+      <h3>Vibrant Vegan Buddha Bowl</h3>
+      <p>
+        A nutritious and colorful bowl of quinoa, chickpeas, avocado, and mixed
+        vegetables, drizzled with a tahini dressing.
+      </p>
+      <a href="#">Read More</a>
+    </div>
   </div>
-  <!-- Repeat for other featured recipes -->
-</section>
-
-<section class="categories">
-  <h2>Categories</h2>
-  <!-- Render categories dynamically -->
-  <ul>
-    <li><a href="#">Category 1</a></li>
-    <li><a href="#">Category 2</a></li>
-    <!-- Repeat for other categories -->
-  </ul>
 </section>
 {% endblock %}
