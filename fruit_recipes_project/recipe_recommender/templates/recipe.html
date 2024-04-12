@@ -1,0 +1,23 @@
+{% extends "base.html" %} {% load static %} {% block content %}
+<section class="featured-recipes">
+  <h2>Featured Recipes</h2>
+  <!-- Render featured recipes dynamically -->
+  <div class="recipe-card">
+    <img src="{% static 'images/recipe1.jpg' %}" alt="Recipe 1" />
+    <h3>Recipe Title</h3>
+    <p>Description of the recipe.</p>
+    <a href="#">Read More</a>
+  </div>
+  <!-- Repeat for other featured recipes -->
+</section>
+
+<section class="categories">
+  <h2>Categories</h2>
+  <!-- Render categories dynamically -->
+  <ul>
+    <li><a href="#">Category 1</a></li>
+    <li><a href="#">Category 2</a></li>
+    <!-- Repeat for other categories -->
+  </ul>
+</section>
+{% endblock %}

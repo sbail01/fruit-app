@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import register, index, profile_view, upload_photo
+from .views import register, index, profile_view, upload_photo, recipe_view
 
 app_name = 'recipe_recommender'  
 
@@ -10,6 +10,7 @@ urlpatterns = [
     path('upload/', views.upload_image, name='upload_image'),
     path('save/',views.save_csv,name='save'),
     path('register/', register, name='register'),
+    path('recipes/', recipe_view, name='recipe_page'),
     path('', views.home_view, name='home'),
     path('accounts/profile/', profile_view, name='profile'),
     path('edit-profile/', views.edit_profile_view, name='edit_profile'),
