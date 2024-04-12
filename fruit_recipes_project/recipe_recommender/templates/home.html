@@ -1,26 +1,79 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block content %}
-<section class="featured-recipes">
-    <h2>Featured Recipes</h2>
-    <!-- Render featured recipes dynamically -->
-    <div class="recipe-card">
-        <img src="{% static 'images/recipe1.jpg' %}" alt="Recipe 1">
-        <h3>Recipe Title</h3>
-        <p>Description of the recipe.</p>
-        <a href="#">Read More</a>
+{% extends "base.html" %} {% load static %} {% block content %}
+<section
+  class="featured-recipes"
+  style="display: flex; width: 100%; height: 100%"
+>
+  <!-- Slideshow container -->
+  <div
+    class="slideshow-container"
+    style="
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 80%;
+    "
+  >
+    <!-- Full-width images with number and caption text -->
+    <div class="mySlides fade" style="display: flex">
+      <img src="{% static './assets/recipe2.jpg' %}" alt="Caption Text" />
+      <div
+        class="numbertext"
+        style="display: flex; justify-content: center; align-items: center"
+      >
+        1 / 2
+      </div>
     </div>
-    <!-- Repeat for other featured recipes -->
-</section>
 
-<section class="categories">
-    <h2>Categories</h2>
-    <!-- Render categories dynamically -->
-    <ul>
-        <li><a href="#">Category 1</a></li>
-        <li><a href="#">Category 2</a></li>
-        <!-- Repeat for other categories -->
-    </ul>
+    <div class="mySlides fade">
+      <img src="{% static 'assets/recipe12.png' %}" alt="Caption Text" />
+      <div
+        class="numbertext"
+        style="display: flex; justify-content: center; align-items: center"
+      >
+        2 / 2
+      </div>
+    </div>
+  </div>
+  <br />
+
+  <!-- The dots/circles -->
+  <div style="text-align: center">
+    <span class="dot" onclick="currentSlide(1)"></span>
+    <span class="dot" onclick="currentSlide(2)"></span>
+    <span class="dot" onclick="currentSlide(3)"></span>
+  </div>
 </section>
+<script>
+  let slideIndex = 0;
+  showSlides(); // Start the slideshow immediately
+
+  function plusSlides(n) {
+    showSlides((slideIndex += n));
+  }
+
+  function currentSlide(n) {
+    showSlides((slideIndex = n));
+  }
+
+  function showSlides() {
+    let i;
+    let slides = document.getElementsByClassName("mySlides");
+    let dots = document.getElementsByClassName("dot");
+    for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
+    }
+    slideIndex++;
+    if (slideIndex > slides.length) {
+      slideIndex = 1;
+    }
+    for (i = 0; i < dots.length; i++) {
+      dots[i].className = dots[i].className.replace(" active", "");
+    }
+    slides[slideIndex - 1].style.display = "block";
+    dots[slideIndex - 1].className += " active";
+    setTimeout(showSlides, 2000); // Change image every 2 seconds
+  }
+</script>
+
 {% endblock %}

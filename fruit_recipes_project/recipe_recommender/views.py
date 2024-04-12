@@ -63,6 +63,9 @@ def profile_view(request):
 def home_view(request):
     return render(request, 'home.html')
 
+def recipe_view(request):
+    return render(request, 'recipe.html')
+
 @login_required
 def edit_profile_view(request):
     try:

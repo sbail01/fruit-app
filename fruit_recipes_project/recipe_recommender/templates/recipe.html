@@ -1,0 +1,328 @@
+{% extends "base.html" %} {% load static %} {% block content %}
+<style>
+  .featured-recipes {
+    text-align: center;
+    padding: 20px 0;
+    width: 100%;
+  }
+
+  .recipe-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px auto 0;
+  }
+  .recipe-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .recipe-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .recipe-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .recipe-card h3 {
+    color: #333;
+    padding: 16px;
+    margin: 0;
+  }
+
+  .recipe-card p {
+    padding: 0 16px 16px;
+    margin: 5px;
+    color: #666;
+  }
+
+  .recipe-card a {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #2b2b2b;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 20px;
+    margin: 20px;
+  }
+
+  .modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  padding-top: 20px; /* Reduced padding-top to move the modal up */
+}
+  /* Optional: Responsive adjustments */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 90%; /* Smaller width on smaller screens */
+  }
+}
+
+  .modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: auto;
+    padding: 0;
+    border: 1px solid #888;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    animation-name: animatetop;
+    margin: auto;
+    width: 40%; /* Adjusted width to be 60% of the viewport width */
+    animation-duration: 0.4s
+  }
+
+  /* Add animation */
+  @keyframes animatetop {
+    from {top: -300px; opacity: 0}
+    to {top: 0; opacity: 1}
+  }
+
+  .close {
+    color: white;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    margin-right: 15px;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .modal-header {
+    padding: 2px 16px;
+    background-color: #5cb85c;
+    color: white;
+  }
+
+/* Modal Image Styling */
+.modal img#recipeImage {
+  max-width: 100%; /* Maximum width of the image to fit the container */
+  max-height: 60vh; /* Maximum height of the image relative to the viewport height */
+  height: auto; /* To maintain aspect ratio */
+  margin-bottom: 20px; /* Space below the image */
+}
+
+/* Modal Body Styling */
+.modal-body {
+  max-height: 80vh; /* Maximum body height relative to the viewport height */
+  overflow-y: auto; /* Enable vertical scroll if content is taller than max-height */
+  padding: 20px; /* Padding around the content */
+}
+
+
+  .modal-footer {
+    padding: 2px 16px;
+    background-color: #5cb85c;
+    color: white;
+  }
+</style>
+<section class="featured-recipes">
+  <div
+    style="
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: row;
+    "
+  >
+    <!-- <h2>Featured Recipes</h2> -->
+    <div class="recipe-cards-container">
+      <!-- Recipe Card 1 -->
+      <div class="recipe-card">
+        <img
+          src="{% static 'assets/spaghetti.png' %}"
+          alt="Classic Spaghetti Carbonara"
+        />
+        <h3>Classic Spaghetti Carbonara</h3>
+        <p>
+          A traditional Italian pasta dish with creamy egg sauce, pancetta, and
+          Parmesan cheese.
+        </p>
+        <a href="#">Read More</a>
+      </div>
+      <!-- Recipe Card 2 -->
+      <div class="recipe-card">
+        <img
+          src="{% static 'assets/taco.png' %}"
+          alt="Authentic Chicken Tacos"
+        />
+        <h3>Authentic Chicken Tacos</h3>
+        <p>
+          Soft tortillas filled with spicy chicken, salsa, avocado, and fresh
+          cilantro.
+        </p>
+        <a href="#">Read More</a>
+      </div>
+      <!-- Recipe Card 3 -->
+      <div class="recipe-card">
+        <img src="{% static 'assets/sushi.png' %}" alt="Sushi Delight" />
+        <h3>Sushi Delight</h3>
+        <p>
+          An assortment of fresh nigiri and sushi rolls with pickled ginger and
+          wasabi.
+        </p>
+        <a href="#">Read More</a>
+      </div>
+      <!-- Recipe Card 4 -->
+      <div class="recipe-card">
+        <img
+          src="{% static 'assets/butterchicken.png' %}"
+          alt="Butter Chicken"
+        />
+        <h3>Butter Chicken</h3>
+        <p>
+          Rich and creamy tomato curry with tender pieces of marinated chicken,
+          served with basmati rice.
+        </p>
+        <a href="#">Read More</a>
+      </div>
+      <!-- Recipe Card 5 -->
+      <div class="recipe-card">
+        <img
+          src="{% static 'assets/bowl.png' %}"
+          alt="Vibrant Vegan Buddha Bowl"
+        />
+        <h3>Vibrant Vegan Buddha Bowl</h3>
+        <p>
+          A nutritious and colorful bowl of quinoa, chickpeas, avocado, and
+          mixed vegetables, drizzled with a tahini dressing.
+        </p>
+        <a href="#">Read More</a>
+      </div>
+      <div id="myModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <span class="close">&times;</span>
+            <h2 id="recipeTitle"></h2>
+          </div>
+          <div class="modal-body">
+            <img id="recipeImage" src="" alt="Recipe Image" style="max-width:100%; margin-bottom: 20px;">
+            <p id="recipeDuration" ></p>
+            <p id="recipeSteps" style="text-align: left; padding-right: 20px;"></p>
+          </div>
+        </div>
+      </div>
+  </div>
+</section>
+  <script type="text/javascript">
+    // Your existing arrays (shown above)
+    var recipe_steps = [
+    [
+        "1. Cook spaghetti in salted boiling water until al dente.",
+        "2. Meanwhile, fry pancetta in a little oil until crispy.",
+        "3. Beat eggs with grated Parmesan and season with pepper.",
+        "4. Drain pasta and reserve some cooking water.",
+        "5. Mix pasta, pancetta, and egg mixture, adding cooking water if needed to make it creamy.",
+        "6. Serve immediately with extra Parmesan."
+    ],
+    [
+        "1. Marinate chicken in a mix of chili powder, cumin, garlic, and lime juice.",
+        "2. Grill chicken until fully cooked and slice it.",
+        "3. Warm tortillas on a skillet.",
+        "4. Assemble tacos with chicken, salsa, slices of avocado, and chopped cilantro.",
+        "5. Serve with lime wedges on the side."
+    ],
+    [
+        "1. Prepare sushi rice with seasoned rice vinegar.",
+        "2. Slice fresh fish like salmon and tuna for nigiri.",
+        "3. Cut vegetables and fish for filling the sushi rolls.",
+        "4. Place a sheet of nori on a bamboo mat and spread rice evenly.",
+        "5. Add fillings and roll tightly, then cut into pieces.",
+        "6. Serve with pickled ginger, soy sauce, and wasabi."
+    ],
+    [
+        "1. Marinate chicken in a mix of yogurt, lemon juice, and spices.",
+        "2. Cook onions, garlic, and ginger in butter until soft.",
+        "3. Add tomato puree, spices, and simmer until thickened.",
+        "4. Grill the chicken, then cut into pieces and add to the sauce.",
+        "5. Stir in cream and simmer until chicken is tender.",
+        "6. Garnish with coriander and serve with basmati rice."
+    ],
+    [
+        "1. Cook quinoa as per package instructions.",
+        "2. Roast chickpeas in the oven with spices until crispy.",
+        "3. Slice avocado and prepare various raw vegetables like bell pepper, carrots, and cucumber.",
+        "4. Assemble bowl with quinoa, roasted chickpeas, avocado, and vegetables.",
+        "5. Drizzle with tahini dressing and sprinkle with sesame seeds before serving."
+    ]
+]
+
+    var recipe_durations = [
+    "Prep Time: 15 mins | Cook Time: 20 mins",
+    "Prep Time: 25 mins | Cook Time: 15 mins",
+    "Prep Time: 45 mins | Cook Time: 0 mins",
+    "Prep Time: 30 mins | Cook Time: 1 hr",
+    "Prep Time: 20 mins | Cook Time: 30 mins"
+];
+  
+   // When the user clicks on <span> (x), close the modal
+    var modal = document.getElementById('myModal');
+  var span = document.getElementsByClassName("close")[0];
+  
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+
+  // When the user clicks anywhere outside of the modal, close it
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+
+  // Function to open the modal
+  function openModal(index) {
+    var recipeImages = [
+      '{% static "assets/spaghetti.png" %}',
+      '{% static "assets/taco.png" %}',
+      '{% static "assets/sushi.png" %}',
+      '{% static "assets/butterchicken.png" %}',
+      '{% static "assets/bowl.png" %}'
+    ];
+
+    var recipeTitles = [
+      'Classic Spaghetti Carbonara',
+      'Authentic Chicken Tacos',
+      'Sushi Delight',
+      'Butter Chicken',
+      'Vibrant Vegan Buddha Bowl'
+    ];
+    document.getElementById('recipeImage').src = recipeImages[index];
+    document.getElementById('recipeTitle').innerText = recipeTitles[index];
+    document.getElementById('recipeDuration').innerText = recipe_durations[index];
+    document.getElementById('recipeSteps').innerText = recipe_steps[index].join('\n');
+    modal.style.display = "block";
+  }
+
+  // Add event listeners for each 'Read More' button
+  var readMoreButtons = document.querySelectorAll('.recipe-card a');
+  readMoreButtons.forEach(function(button, index) {
+    button.addEventListener('click', function(event) {
+      event.preventDefault();
+      openModal(index);
+    });
+  });
+</script>
+{% endblock %}
