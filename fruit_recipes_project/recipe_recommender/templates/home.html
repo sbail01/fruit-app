@@ -1,7 +1,7 @@
 {% extends "base.html" %} {% load static %} {% block content %}
 <section
   class="featured-recipes"
-  style="display: flex; width: 100%; height: 100%"
+  style="display: flex; width: 100%; height: 100%; flex-direction: column"
 >
   <!-- Slideshow container -->
   <div
@@ -25,7 +25,7 @@
       </div>
     </div>
 
-    <div class="mySlides fade">
+    <div class="mySlides fade" style="display: flex">
       <img src="{% static 'assets/recipe12.png' %}" alt="Caption Text" />
       <div
         class="numbertext"
@@ -41,7 +41,6 @@
   <div style="text-align: center">
     <span class="dot" onclick="currentSlide(1)"></span>
     <span class="dot" onclick="currentSlide(2)"></span>
-    <span class="dot" onclick="currentSlide(3)"></span>
   </div>
 </section>
 <script>
@@ -70,7 +69,7 @@
     for (i = 0; i < dots.length; i++) {
       dots[i].className = dots[i].className.replace(" active", "");
     }
-    slides[slideIndex - 1].style.display = "block";
+    slides[slideIndex - 1].style.display = "flex";
     dots[slideIndex - 1].className += " active";
     setTimeout(showSlides, 2000); // Change image every 2 seconds
   }
