@@ -48,7 +48,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)  # Log the user in
-            return redirect('edit_profile')  # Redirect to the edit profile page
+            return render(request, 'home.html')
     else:
         form = UserCreationForm()
     return render(request, 'register.html', {'form': form})
@@ -58,7 +58,7 @@ def index(request):
 
 @login_required
 def profile_view(request):
-    return render(request, 'recipe_recommender/profile.html', {'user': request.user})
+    return render(request, 'home.html')
 
 def home_view(request):
     return render(request, 'home.html')
