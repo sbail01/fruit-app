@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Upload or Capture Photo</title>
+    <title>Upload or Capture Photo</title> -->
+    {% extends "base.html" %} {% load static %} {% block content %}
     <style>
       /* Base styles */
       body {
@@ -49,7 +50,7 @@
       }
 
       .switch-container label {
-        margin: 0 10px;
+        margin: 10px;
         font-size: 14px;
       }
 
@@ -371,113 +372,95 @@
     </style>
   </head>
   <body>
-    <header>
-      <div style="flex-direction: row; display: flex">
-        <img
-          src="../static/assets/dishcovery.png"
-          alt="DishCovery logo"
-          id="logo"
-        />
-        <h1 style="display: flex">DishCovery</h1>
+    <div style="display: flex; flex-direction: column;">
+      <div class="switch-container">
+        <label for="togBtn">Click & Upload</label>
+        <label class="switch">
+          <input type="checkbox" id="togBtn" />
+          <span class="slider round"></span>
+        </label>
+        <label for="togBtn">Upload from Device</label>
       </div>
-      <nav>
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="/recipes/">Recipes</a></li>
-          <li><a href="/pic-uploading-page/">Custom Recipe</a></li>
-        </ul>
-      </nav>
-    </header>
-    <div class="switch-container">
-      <label for="togBtn">Click & Upload</label>
-      <label class="switch">
-        <input type="checkbox" id="togBtn" />
-        <span class="slider round"></span>
-      </label>
-      <label for="togBtn">Upload from Device</label>
-    </div>
-
-    <div id="camera-container">
-      <video id="camera" autoplay></video>
-      <div
+      
+      <div id="camera-container">
+        <video id="camera" autoplay></video>
+        <div
         style="
           display: flex;
           justify-content: center;
           align-items: center;
           gap: 10px;
-        "
+          "
       >
-        <!-- Use the same class for both buttons -->
-        <button class="icon-button" id="capture" title="Capture">
-          Capture
+      <!-- Use the same class for both buttons -->
+      <button class="icon-button" id="capture" title="Capture">
+        Capture
+      </button>
+      <button class="icon-button" id="switchCamera" title="Switch Camera">
+        Switch
+      </button>
+    </div>
+    <canvas id="canvas"></canvas>
+  </div>
+  
+  <div id="drop-area" style="display: flex">
+    <p>Drag and Drop file here or click to browse</p>
+    <input type="file" id="fileElem" multiple accept="image/*" />
+  </div>
+  <!-- The Modal for Recipe Display -->
+  <div id="recipeModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Recipe Details</h2>
+        <span class="close">&times;</span>
+      </div>
+      <div class="modal-body">
+        <h3 id="recipeName"></h3>
+        <p><strong>Duration:</strong> <span id="recipeDuration"></span></p>
+        <p><strong>Steps:</strong> <span id="recipeSteps"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button class="icon-button" id="closeRecipeModal">Close</button>
+      </div>
+    </div>
+  </div>
+  <!-- The Modal for Preview and Data Edit -->
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Preview and Edit Data</h2>
+        <span class="close">&times;</span>
+      </div>
+      <div class="modal-body">
+        <img id="image-preview" class="image-preview" style="display: none" />
+        <!-- Editable Data List Will Be Populated Here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="saveDataBtn" class="icon-button">
+          Save
         </button>
-        <button class="icon-button" id="switchCamera" title="Switch Camera">
-          Switch
+        <button type="button" id="cancelBtn" class="icon-button">
+          Cancel
         </button>
       </div>
-      <canvas id="canvas"></canvas>
     </div>
-
-    <div id="drop-area" style="display: flex">
-      <p>Drag and Drop file here or click to browse</p>
-      <input type="file" id="fileElem" multiple accept="image/*" />
-    </div>
-    <!-- The Modal for Recipe Display -->
-    <div id="recipeModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Recipe Details</h2>
-          <span class="close">&times;</span>
-        </div>
-        <div class="modal-body">
-          <h3 id="recipeName"></h3>
-          <p><strong>Duration:</strong> <span id="recipeDuration"></span></p>
-          <p><strong>Steps:</strong> <span id="recipeSteps"></span></p>
-        </div>
-        <div class="modal-footer">
-          <button class="icon-button" id="closeRecipeModal">Close</button>
-        </div>
-      </div>
-    </div>
-    <!-- The Modal for Preview and Data Edit -->
-    <div id="myModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Preview and Edit Data</h2>
-          <span class="close">&times;</span>
-        </div>
-        <div class="modal-body">
-          <img id="image-preview" class="image-preview" style="display: none" />
-          <!-- Editable Data List Will Be Populated Here -->
-        </div>
-        <div class="modal-footer">
-          <button type="button" id="saveDataBtn" class="icon-button">
-            Save
-          </button>
-          <button type="button" id="cancelBtn" class="icon-button">
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-    <footer>
-      <p>&copy; 2024 DishCovery. All rights reserved.</p>
-    </footer>
-    <script>
-      const togBtn = document.getElementById("togBtn");
-      const cameraContainer = document.getElementById("camera-container");
-      const dropArea = document.getElementById("drop-area");
-      const camera = document.getElementById("camera");
-      const canvas = document.getElementById("canvas");
-      const capture = document.getElementById("capture");
-      const fileElem = document.getElementById("fileElem");
-      const modal = document.getElementById("myModal");
-      const myModal = document.getElementById("myModal"); // The editable modal
-      const closeBtn = modal.querySelector(".close");
-      const saveDataBtn = modal.querySelector("#saveDataBtn");
-      const uploadBtn = document.getElementById("uploadBtn");
-      const cancelBtn = modal.querySelector("#cancelBtn");
-      const imageInput = document.getElementById("imageInput");
+  </div>
+  </div>
+  <script>
+    const togBtn = document.getElementById("togBtn");
+    const cameraContainer = document.getElementById("camera-container");
+    const dropArea = document.getElementById("drop-area");
+    const camera = document.getElementById("camera");
+    const canvas = document.getElementById("canvas");
+    const capture = document.getElementById("capture");
+    const fileElem = document.getElementById("fileElem");
+    const modal = document.getElementById("myModal");
+    const myModal = document.getElementById("myModal"); // The editable modal
+    const closeBtn = modal.querySelector(".close");
+    const saveDataBtn = modal.querySelector("#saveDataBtn");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const cancelBtn = modal.querySelector("#cancelBtn");
+    const imageInput = document.getElementById("imageInput");
       const imagePreview = document.getElementById("image-preview");
       const previewModal = document.getElementById("previewModal"); // The non-editable modal
       let recipe = { recipe_name: "", recipe_duration: null, recipe_steps: "" };
@@ -911,4 +894,4 @@
       });
     </script>
   </body>
-</html>
+  {% endblock %}
