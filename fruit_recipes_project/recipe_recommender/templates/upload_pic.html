@@ -9,12 +9,10 @@
       body {
         font-family: Arial, sans-serif;
         margin: 0;
-        padding: 10px;
         background-color: #f7f7f7;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
         min-height: 100vh;
         overflow: hidden;
       }
@@ -46,7 +44,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 20px;
+        margin-top: 40px;
+        margin-bottom: 25px;
       }
 
       .switch-container label {
@@ -197,6 +196,51 @@
         font-size: 28px;
         font-weight: bold;
       }
+      header {
+        background-color: #333;
+        color: #fff;
+        display: flex;
+        justify-content: space-between; /* Aligns children with space between them */
+        padding: 1rem 2rem;
+        align-items: center;
+      }
+
+      header #logo {
+        height: auto; /* Control the size via CSS for better responsiveness */
+        width: 5%; /* Adjust the width as necessary */
+        margin-right: 1rem; /* Adds a little space between the image and the h1 */
+      }
+
+      header h1 {
+        margin: 0; /* Removes default margin */
+        font-size: 1.5rem;
+        padding: 10px 10px 10px 0px;
+      }
+
+      nav ul {
+        padding: 0;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        margin: 0;
+        width: auto;
+      }
+
+      nav ul li {
+        margin-left: 20px;
+        width: max-content; /* Adjust space between nav items as needed */
+      }
+      nav ul li a {
+        text-decoration: none;
+        color: #fff;
+        font-weight: bold;
+        transition: color 0.3s ease;
+      }
+
+      nav ul li a:hover,
+      nav ul li a:focus {
+        color: #aaa;
+      }
 
       .close:hover,
       .close:focus {
@@ -311,9 +355,39 @@
         justify-content: space-around; /* Centers items horizontally */
         transition: background-color 0.1s; /* Smooth transition for hover effect */
       }
+      footer {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 1rem 0;
+        margin-top: auto;
+        width: 100%;
+      }
+
+      footer p {
+        margin: 0;
+        font-size: 0.8rem;
+      }
     </style>
   </head>
   <body>
+    <header>
+      <div style="flex-direction: row; display: flex">
+        <img
+          src="../static/assets/dishcovery.png"
+          alt="DishCovery logo"
+          id="logo"
+        />
+        <h1 style="display: flex">DishCovery</h1>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/recipes/">Recipes</a></li>
+          <li><a href="/pic-uploading-page/">Custom Recipe</a></li>
+        </ul>
+      </nav>
+    </header>
     <div class="switch-container">
       <label for="togBtn">Click & Upload</label>
       <label class="switch">
@@ -386,6 +460,9 @@
         </div>
       </div>
     </div>
+    <footer>
+      <p>&copy; 2024 DishCovery. All rights reserved.</p>
+    </footer>
     <script>
       const togBtn = document.getElementById("togBtn");
       const cameraContainer = document.getElementById("camera-container");
