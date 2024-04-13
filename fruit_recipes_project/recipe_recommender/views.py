@@ -210,7 +210,7 @@ def parse_recipes(response):
 
 # Function to generate recipes
 def generate_recipes(ingredients):
-    prompt = f"Ingredients: {', '.join(ingredients)}. Please generate three possible recipes. Only need recipe name (as Name:), duration (as Duration:) and steps (as Steps:). Do not need ingredients list again."
+    prompt = f"Ingredients: {', '.join(ingredients)}. Please generate three possible recipes. Only need recipe name (as Name:), duration (as Duration:) and steps (as Steps:). Do not need ingredients list again. Stricly use the provided ingredients to generate recipes."
 
     response = openai.Completion.create(
         engine="gpt-3.5-turbo-instruct",
