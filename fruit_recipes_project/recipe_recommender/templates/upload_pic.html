@@ -138,27 +138,30 @@
     background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
     padding-top: 60px;
   }
-
   .modal-body {
-    max-height: 70vh; /* sets a maximum height relative to the viewport */
-    overflow-y: scroll; /* allows scrolling within the modal body if the content is too tall */
-  }
+  overflow-y: auto; /* Scroll on overflow */
+  flex: 1; /* Allows the body to expand */
+  margin: 20px;
+}
 
   .modal-content {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 70%;
-    max-height: 600px;
-    max-width: 600px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Shadow for depth */
-    border-radius: 10px; /* Rounded corners */
-  }
+  display: flex;
+  flex-direction: column;
+  height: 70vh; /* Adjust the height as necessary to fit within the viewport */
+  width: 40%; /* Adjust the width as necessary */
+  margin: auto; /* Centers the modal */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+  border: 1px solid #888; /* Border */
+  background-color: #fefefe; /* Background color */
+  overflow: hidden; /* Ensures no overflow outside the modal */
+}
+
   .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    
   }
 
   .modal-header h2 {
@@ -167,17 +170,21 @@
 
   .modal-header,
   .modal-footer {
-    padding: 10px 0; /* Padding for header and footer */
+    padding: 0; /* Padding for header and footer */
     display: flex;
   }
 
   .modal-header {
     border-bottom: 1px solid #eee; /* Light border for the header */
+    margin: 20px;
   }
 
   .modal-footer {
-    border-top: 1px solid #eee; /* Light border for the footer */
-    justify-content: flex-end; /* Center the buttons */
+    background: #fff; /* Match the footer background with the modal content */
+  border-top: 1px solid #eee; /* Light border for the footer */
+  padding: 10px 20px; /* Padding */
+  display: flex;
+  justify-content: flex-end; /* Pushes the buttons to the right */
   }
 
   .modal-footer button {
@@ -576,6 +583,13 @@ const imageInput = document.getElementById("imageInput");
       imageDataUrl = "";
     });
   });
+  document.addEventListener('DOMContentLoaded', (event) => {
+    // Event listeners here
+    document.getElementById("closeRecipeModal").addEventListener("click", function() {
+        document.getElementById("recipeModal").style.display = "none";
+    });
+    // ... other event listeners ...
+});
 
   document
     .getElementById("switchCamera")
