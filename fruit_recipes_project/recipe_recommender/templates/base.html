@@ -116,10 +116,19 @@
       </nav>
     </header>
 
-    <main style="display: flex">{% block content %} {% endblock %}</main>
+    <main style="display: flex; overflow: auto">
+      {% block content %} {% endblock %}
+    </main>
 
     <footer>
-      <p>&copy; 2024 DishCovery. All rights reserved. By using our service, you agree that any images uploaded and data provided may be utilized exclusively for enhancing your user experience and as anonymized training data to refine our AI model and ingredient detection capabilities. Your privacy is important to us, and your personal information will not be shared or sold. </p>
+      <p>
+        &copy; 2024 DishCovery. All rights reserved. By using our service, you
+        agree that any images uploaded and data provided may be utilized
+        exclusively for enhancing your user experience and as anonymized
+        training data to refine our AI model and ingredient detection
+        capabilities. Your privacy is important to us, and your personal
+        information will not be shared or sold.
+      </p>
     </footer>
   </body>
 </html>
