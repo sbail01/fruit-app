@@ -1,8 +1,9 @@
 {% extends "base.html" %} {% load static %} {% block content %}
-<h2>Login</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
+<div style="display: flex; flex-direction: column">
+  <h2>Login</h2>
+  <form method="post">
+    {% csrf_token %} {{ form.as_p }}
     <button type="submit">Login</button>
-</form>
+  </form>
+</div>
 {% endblock %}
